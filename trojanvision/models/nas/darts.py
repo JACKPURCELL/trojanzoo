@@ -314,7 +314,8 @@ class DARTS(ImageModel):
                     data_valid = next(self.valid_iterator)
                     input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
                     self.arch_optimizer.zero_grad()
-                    if self.arch_unrolled:
+                    if self.arch_unrolled:# here is backward the a
+                        #TODO  self._backward_step_unrolled(_input, _label, input_valid, label_valid_teacher_output)
                         self._backward_step_unrolled(_input, _label, input_valid, label_valid)
                     else:
                         loss = self.loss(input_valid, label_valid)
@@ -373,7 +374,7 @@ class DARTS(ImageModel):
 
         for g, ig in zip(dalpha, implicit_grads):
             g.data.sub_(ig, alpha=eta)
-
+# 该虚拟梯度步骤的学习率
         for v, g in zip(self.arch_parameters(), dalpha):
             if v.grad is None:
                 v.grad = g.data
