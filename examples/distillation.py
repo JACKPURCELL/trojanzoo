@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # kwargs['model'] = 'DARTS'
 
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
-    filename = "../cifar10_model.pt"
+    filename = "./cifar10_model.pt"
     tea_model.load(filename)
 
 
