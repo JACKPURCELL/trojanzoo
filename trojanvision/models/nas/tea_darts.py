@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --verbose 1 --dataset cifar10 --model darts --supernet --arch_search --arch_unrolled --layers 8 --init_channels 16 --batch_size 64 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50
+CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --arch_unrolled --layers 8 --init_channels 16 --batch_size 64 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save
 """  # noqa: E501
   
 from cProfile import label
