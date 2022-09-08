@@ -42,7 +42,7 @@ def distillation(module: nn.Module, num_classes: int,
           accuracy_fn: Callable[..., list[float]] = None,
           verbose: bool = True, output_freq: str = 'iter', indent: int = 0,
           change_train_eval: bool = True, lr_scheduler_freq: str = 'epoch',
-          backward_and_step: bool = True,
+          backward_and_step: bool = True, tea_forward_fn: Callable[..., torch.Tensor] = None,
           **kwargs):
     r"""Train the model"""
     if epochs <= 0:
@@ -50,6 +50,8 @@ def distillation(module: nn.Module, num_classes: int,
     get_data_fn = get_data_fn or (lambda x: x)
     forward_fn = forward_fn or module.__call__
     loss_fn = loss_fn or (lambda _input, _label, _output=None: F.cross_entropy(_output or forward_fn(_input), _label))
+    soft_loss_fn = nn.KLDivLoss(reduction="batchmean")
+    
     validate_fn = validate_fn or validate 
     accuracy_fn = accuracy_fn or accuracy
 
@@ -104,14 +106,33 @@ def distillation(module: nn.Module, num_classes: int,
         if change_train_eval:
             module.train()
         activate_params(module, params)
+
+
+
+#----------------------------------------------------------------
+
+        # _input, _label = get_data_fn(data, mode='valid', **kwargs)
+        # with torch.no_grad():
+        #     tea_output = forward_tea_fn(_input, amp=amp, parallel=True)
+        # results.append([_input,  tea_output, _label])
+
+        # _input, _label = get_data_fn(data, mode='valid')
+        # if pre_conditioner is not None and not amp:
+        #     pre_conditioner.track.enable()
+        # _output = forward_fn(_input, amp=amp, parallel=True)
+#----------------------------------------------------------------
+
+        
         for i, data in enumerate(loader_epoch):
             _iter = _epoch * len_loader_train + i
             # data_time.update(time.perf_counter() - end)
-            _input, _label = get_data_fn(data, mode='train')
+            _input, _label, _soft_label = get_data_fn(data, mode='train')
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
+                #TODO: maybe can remove
+            soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
             _output = forward_fn(_input, amp=amp, parallel=True)
-            loss = loss_fn(_input, _label, _output=_output, amp=amp)
+            loss = soft_loss_fn(soft_target, _output)
             if backward_and_step:
                 optimizer.zero_grad()
                 if amp:
@@ -130,8 +151,9 @@ def distillation(module: nn.Module, num_classes: int,
                     scaler.step(optimizer)
                     scaler.update()
                 else:
+                    #backward the weights 
                     loss.backward()
-                    if callable(after_loss_fn):
+                    if callable(after_loss_fn):#miss
                         after_loss_fn(_input=_input, _label=_label,
                                       _output=_output,
                                       loss=loss, optimizer=optimizer,

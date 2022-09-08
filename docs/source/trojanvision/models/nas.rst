@@ -8,6 +8,9 @@ nas
 .. autoclass:: DARTS
    :members:
 
+.. autoclass:: TEA_DARTS
+   :members:
+
 .. autoclass:: ENAS
    :members:
 

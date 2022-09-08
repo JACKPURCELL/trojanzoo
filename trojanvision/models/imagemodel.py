@@ -575,6 +575,96 @@ class ImageModel(Model):
                               accuracy_fn=accuracy_fn,
                               verbose=verbose, indent=indent, **kwargs)
 
+    def _distillation(self, epochs: int, optimizer: Optimizer, lr_scheduler: _LRScheduler = None,
+               adv_train: bool = None,
+               lr_warmup_epochs: int = 0,
+               model_ema: ExponentialMovingAverage = None,
+               model_ema_steps: int = 32,
+               grad_clip: float = None, pre_conditioner: None | KFAC | EKFAC = None,
+               print_prefix: str = 'Train', start_epoch: int = 0, resume: int = 0,
+               validate_interval: int = 10, save: bool = False, amp: bool = False,
+               loader_train: torch.utils.data.DataLoader = None,
+               loader_valid: torch.utils.data.DataLoader = None,
+               epoch_fn: Callable[..., None] = None,
+               get_data_fn: Callable[...,
+                                     tuple[torch.Tensor, torch.Tensor]] = None,
+               loss_fn: Callable[..., torch.Tensor] = None,
+               after_loss_fn: Callable[..., None] = None,
+               validate_fn: Callable[..., tuple[float, float]] = None,
+               save_fn: Callable[..., None] = None, file_path: str = None,
+               folder_path: str = None, suffix: str = None,
+               writer=None, main_tag: str = 'train', tag: str = '',
+               accuracy_fn: Callable[..., list[float]] = None,
+               verbose: bool = True, indent: int = 0, tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
+        adv_train = adv_train if adv_train is not None else bool(self.adv_train)
+        if adv_train:
+            after_loss_fn_old = after_loss_fn
+            if not callable(after_loss_fn) and hasattr(self, 'after_loss_fn'):
+                after_loss_fn_old = getattr(self, 'after_loss_fn')
+            loss_fn = loss_fn if callable(loss_fn) else self.loss
+
+            def after_loss_fn_new(_input: torch.Tensor, _label: torch.Tensor, _output: torch.Tensor,
+                                  loss: torch.Tensor, optimizer: Optimizer, loss_fn: Callable[..., torch.Tensor] = None,
+                                  amp: bool = False, scaler: torch.cuda.amp.GradScaler = None, **kwargs):
+                optimizer.zero_grad()
+                self.zero_grad()
+                if pre_conditioner is not None:
+                    pre_conditioner.reset()
+
+                if self.adv_train == 'free':
+                    noise = self.pgd.init_noise(_input.shape, pgd_eps=self.adv_train_eps,
+                                                random_init=self.adv_train_random_init,
+                                                device=_input.device)
+                    adv_x = add_noise(x=_input, noise=noise, universal=self.pgd.universal,
+                                      clip_min=self.pgd.clip_min, clip_max=self.pgd.clip_max)
+                    noise.data = self.pgd.valid_noise(adv_x, _input)
+                    for m in range(self.adv_train_iter):
+                        loss = loss_fn(adv_x, _label)
+                        if amp:
+                            scaler.scale(loss).backward()
+                            scaler.step(optimizer)
+                            scaler.update()
+                        else:
+                            loss.backward()
+                            optimizer.step()
+                        optimizer.zero_grad()
+                        self.zero_grad()
+                        # self.eval()
+                        adv_x, _ = self.pgd.optimize(_input=_input, noise=noise, target=_label, iteration=1,
+                                                     pgd_alpha=self.adv_train_alpha, pgd_eps=self.adv_train_eps)
+                        # self.train()
+                        loss = loss_fn(adv_x, _label)
+                else:
+                    loss = self.adv_loss(_input=_input, _label=_label, loss_fn=loss_fn)
+
+                if amp:
+                    scaler.scale(loss).backward()
+                else:
+                    loss.backward()
+                if callable(after_loss_fn_old):
+                    after_loss_fn_old(_input=_input, _label=_label, _output=_output,
+                                      loss=loss, optimizer=optimizer, loss_fn=loss_fn,
+                                      amp=amp, scaler=scaler, **kwargs)
+            after_loss_fn = after_loss_fn_new
+
+        return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                              adv_train=adv_train,
+                              lr_warmup_epochs=lr_warmup_epochs,
+                              model_ema=model_ema, model_ema_steps=model_ema_steps,
+                              grad_clip=grad_clip, pre_conditioner=pre_conditioner,
+                              print_prefix=print_prefix, start_epoch=start_epoch,
+                              resume=resume, validate_interval=validate_interval,
+                              save=save, amp=amp,
+                              loader_train=loader_train, loader_valid=loader_valid,
+                              epoch_fn=epoch_fn, get_data_fn=get_data_fn,
+                              loss_fn=loss_fn, after_loss_fn=after_loss_fn,
+                              validate_fn=validate_fn,
+                              save_fn=save_fn, file_path=file_path,
+                              folder_path=folder_path, suffix=suffix,
+                              writer=writer, main_tag=main_tag, tag=tag,
+                              accuracy_fn=accuracy_fn,
+                              verbose=verbose, indent=indent, tea_forward_fn=tea_forward_fn,**kwargs)
+
     def adv_loss(self, _input: torch.Tensor, _label: torch.Tensor,
                  loss_fn: Callable[..., torch.Tensor] = None,
                  adv_train: str = None) -> torch.Tensor:

@@ -16,6 +16,8 @@ CUDA_VISIBLE_DEVICES=0 python examples/train.py --verbose 1 --color --dataset mn
 import trojanvision
 import argparse
 
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     trojanvision.environ.add_argument(parser)
@@ -23,7 +25,7 @@ if __name__ == '__main__':
     trojanvision.models.add_argument(parser)
     trojanvision.trainer.add_argument(parser)
     kwargs = parser.parse_args().__dict__
-
+    # kwargs['model_name'] = 'tea_darts'
     env = trojanvision.environ.create(**kwargs)
     dataset = trojanvision.datasets.create(**kwargs)
     model = trojanvision.models.create(dataset=dataset, **kwargs)

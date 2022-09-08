@@ -87,6 +87,42 @@ def create(model_name: str = None, model: str | ImageModel = None,
                                    dataset_name=dataset_name, dataset=dataset,
                                    config=config, class_dict=class_dict, **kwargs)
 
+def load(model_name: str = None, model: str | ImageModel = None,
+           dataset_name: str = None, dataset: str | ImageSet = None,
+           config: Config = config, class_dict: dict[str, type[ImageModel]] = class_dict,
+           **kwargs) -> ImageModel:
+    r"""
+    | Create a model instance.
+    | For arguments not included in :attr:`kwargs`,
+      use the default values in :attr:`config`.
+    | The default value of :attr:`folder_path` is
+      ``'{model_dir}/{dataset.data_type}/{dataset.name}'``.
+    | For model implementation, see :class:`ImageModel`.
+
+    Args:
+        model_name (str): The model name.
+        model (str | ImageModel): The model instance or model name
+            (as the alias of `model_name`).
+        dataset_name (str): The dataset name.
+        dataset (str | trojanvision.datasets.ImageSet):
+            Dataset instance or dataset name
+            (as the alias of `dataset_name`).
+        config (Config): The default parameter config.
+        class_dict (dict[str, type[ImageModel]]):
+            Map from model name to model class.
+            Defaults to ``trojanvision.models.class_dict``.
+        **kwargs: Keyword arguments
+            passed to model init method.
+
+    Returns:
+        ImageModel: The image model instance.
+
+    See Also:
+        :func:`trojanzoo.models.create()`
+    """
+    return trojanzoo.models.load(model_name=model_name, model=model,
+                                   dataset_name=dataset_name, dataset=dataset,
+                                   config=config, class_dict=class_dict, **kwargs)
 
 def output_available_models(class_dict: dict[str, type[ImageModel]] = class_dict, indent: int = 0) -> None:
     r"""Output all available model names.

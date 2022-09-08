@@ -3,7 +3,7 @@
 """
 CUDA_VISIBLE_DEVICES=0 python examples/train.py --color --verbose 1 --dataset cifar10 --model darts --supernet --arch_search --arch_unrolled --layers 8 --init_channels 16 --batch_size 64 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50
 """  # noqa: E501
-
+  
 import trojanvision.utils.model_archs.darts as darts
 from trojanvision.datasets import ImageSet
 from trojanvision.models.imagemodel import _ImageModel, ImageModel
@@ -315,7 +315,6 @@ class DARTS(ImageModel):
                     input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
                     self.arch_optimizer.zero_grad()
                     if self.arch_unrolled:# here is backward the a
-                        #TODO  self._backward_step_unrolled(_input, _label, input_valid, label_valid_teacher_output)
                         self._backward_step_unrolled(_input, _label, input_valid, label_valid)
                     else:
                         loss = self.loss(input_valid, label_valid)
@@ -354,6 +353,33 @@ class DARTS(ImageModel):
                               accuracy_fn=accuracy_fn,
                               verbose=verbose, indent=indent, **kwargs)
 
+#     def _backward_step_unrolled_distill(self, input_train: torch.Tensor, target_train: torch.Tensor,
+#                                 input_valid: torch.Tensor, target_valid: torch.Tensor,
+#                                 optimizer: Optimizer = None):
+#         optimizer = optimizer or self.optimizer
+#         eta = optimizer.param_groups[0]['lr']
+#         # if self.lr_scheduler is not None:
+#         #     eta = self.lr_scheduler.get_last_lr()
+#         w = self.state_dict()
+#         self._compute_unrolled_model(input_train, target_train, eta,
+#                                      optimizer=optimizer)
+#         unrolled_loss = self.loss(input_valid, target_valid)
+#         unrolled_loss.backward()
+#         dalpha = [v.grad for v in self.arch_parameters()]
+#         vector = [v.grad.data for v in self.parameters()]
+
+#         self.load_state_dict(w)
+#         implicit_grads = self._hessian_vector_product(vector, input_train, target_train)
+
+#         for g, ig in zip(dalpha, implicit_grads):
+#             g.data.sub_(ig, alpha=eta)
+# # 该虚拟梯度步骤的学习率
+#         for v, g in zip(self.arch_parameters(), dalpha):
+#             if v.grad is None:
+#                 v.grad = g.data
+#             else:
+#                 v.grad.copy_(g)
+
     def _backward_step_unrolled(self, input_train: torch.Tensor, target_train: torch.Tensor,
                                 input_valid: torch.Tensor, target_valid: torch.Tensor,
                                 optimizer: Optimizer = None):
@@ -371,10 +397,10 @@ class DARTS(ImageModel):
 
         self.load_state_dict(w)
         implicit_grads = self._hessian_vector_product(vector, input_train, target_train)
-
+# g is new grad, ig is eta*loss_train
         for g, ig in zip(dalpha, implicit_grads):
             g.data.sub_(ig, alpha=eta)
-# 该虚拟梯度步骤的学习率
+# 该虚拟梯度步骤的学习率 v is old arch_parameters g is new grad
         for v, g in zip(self.arch_parameters(), dalpha):
             if v.grad is None:
                 v.grad = g.data

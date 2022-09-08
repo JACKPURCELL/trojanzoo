@@ -3,6 +3,8 @@
 from trojanzoo.configs import config
 from trojanzoo.datasets import Dataset
 from trojanzoo.environ import env
+from trojanzoo.utils.distillation import distillation
+# from trojanzoo.utils.distillation import distillation
 from trojanzoo.utils.fim import KFAC, EKFAC
 from trojanzoo.utils.model import (get_all_layer, get_layer, get_layer_name,
                                    activate_params, accuracy, generate_target,
@@ -958,6 +960,60 @@ class Model(BasicObject):
     # ---------------------Train and Validate--------------------- #
     # TODO: annotation and remove those arguments to be *args, **kwargs
     def _train(self, epochs: int, optimizer: Optimizer,
+            lr_scheduler: _LRScheduler = None,
+            lr_warmup_epochs: int = 0,
+            model_ema: ExponentialMovingAverage = None,
+            model_ema_steps: int = 32,
+            grad_clip: float = None, pre_conditioner: None | KFAC | EKFAC = None,
+            print_prefix: str = 'Train', start_epoch: int = 0, resume: int = 0,
+            validate_interval: int = 10, save: bool = False, amp: bool = False,
+            loader_train: torch.utils.data.DataLoader = None,
+            loader_valid: torch.utils.data.DataLoader = None,
+            epoch_fn: Callable[..., None] = None,
+            get_data_fn: Callable[
+                ..., tuple[torch.Tensor, torch.Tensor]] = None,
+            loss_fn: Callable[..., torch.Tensor] = None,
+            after_loss_fn: Callable[..., None] = None,
+            validate_fn: Callable[..., tuple[float, float]] = None,
+            save_fn: Callable[..., None] = None, file_path: str = None,
+            folder_path: str = None, suffix: str = None,
+            writer=None, main_tag: str = 'train', tag: str = '',
+            accuracy_fn: Callable[..., list[float]] = None,
+            verbose: bool = True, indent: int = 0, **kwargs):
+        r"""Train the model"""
+        loader_train = loader_train if loader_train is not None \
+            else self.dataset.loader['train']
+        get_data_fn = get_data_fn if callable(get_data_fn) else self.get_data
+        loss_fn = loss_fn if callable(loss_fn) else self.loss
+        validate_fn = validate_fn if callable(validate_fn) else self._validate
+        save_fn = save_fn if callable(save_fn) else self.save
+        accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
+        kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
+        # if not callable(iter_fn) and hasattr(self, 'iter_fn'):
+        #     iter_fn = getattr(self, 'iter_fn')
+        if not callable(epoch_fn) and hasattr(self, 'epoch_fn'):
+            epoch_fn = getattr(self, 'epoch_fn')
+        if not callable(after_loss_fn) and hasattr(self, 'after_loss_fn'):
+            after_loss_fn = getattr(self, 'after_loss_fn')
+        return train(module=self._model, num_classes=self.num_classes,
+                        epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                        lr_warmup_epochs=lr_warmup_epochs,
+                        model_ema=model_ema, model_ema_steps=model_ema_steps,
+                        grad_clip=grad_clip, pre_conditioner=pre_conditioner,
+                        print_prefix=print_prefix, start_epoch=start_epoch,
+                        resume=resume, validate_interval=validate_interval,
+                        save=save, amp=amp,
+                        loader_train=loader_train, loader_valid=loader_valid,
+                        epoch_fn=epoch_fn, get_data_fn=get_data_fn,
+                        loss_fn=loss_fn, after_loss_fn=after_loss_fn,
+                        validate_fn=validate_fn,
+                        save_fn=save_fn, file_path=file_path,
+                        folder_path=folder_path, suffix=suffix,
+                        writer=writer, main_tag=main_tag, tag=tag,
+                        accuracy_fn=accuracy_fn,
+                        verbose=verbose, indent=indent, **kwargs)
+
+    def _distillation(self, epochs: int, optimizer: Optimizer,
                lr_scheduler: _LRScheduler = None,
                lr_warmup_epochs: int = 0,
                model_ema: ExponentialMovingAverage = None,
@@ -977,7 +1033,8 @@ class Model(BasicObject):
                folder_path: str = None, suffix: str = None,
                writer=None, main_tag: str = 'train', tag: str = '',
                accuracy_fn: Callable[..., list[float]] = None,
-               verbose: bool = True, indent: int = 0, **kwargs):
+               verbose: bool = True, indent: int = 0, 
+               tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         r"""Train the model"""
         loader_train = loader_train if loader_train is not None \
             else self.dataset.loader['train']
@@ -987,13 +1044,15 @@ class Model(BasicObject):
         save_fn = save_fn if callable(save_fn) else self.save
         accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
         kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
+        # kwargs['tea_forward_fn'] = kwargs.get('tea_forward_fn', self.__call__)
+
         # if not callable(iter_fn) and hasattr(self, 'iter_fn'):
         #     iter_fn = getattr(self, 'iter_fn')
         if not callable(epoch_fn) and hasattr(self, 'epoch_fn'):
             epoch_fn = getattr(self, 'epoch_fn')
         if not callable(after_loss_fn) and hasattr(self, 'after_loss_fn'):
             after_loss_fn = getattr(self, 'after_loss_fn')
-        return train(module=self._model, num_classes=self.num_classes,
+        return distillation(module=self._model, num_classes=self.num_classes,
                      epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
                      lr_warmup_epochs=lr_warmup_epochs,
                      model_ema=model_ema, model_ema_steps=model_ema_steps,
@@ -1009,7 +1068,7 @@ class Model(BasicObject):
                      folder_path=folder_path, suffix=suffix,
                      writer=writer, main_tag=main_tag, tag=tag,
                      accuracy_fn=accuracy_fn,
-                     verbose=verbose, indent=indent, **kwargs)
+                     verbose=verbose, indent=indent, tea_forward_fn=tea_forward_fn, **kwargs)
 
     def _validate(self, module: nn.Module = None, num_classes: int = None,
                   loader: torch.utils.data.DataLoader = None,
@@ -1475,6 +1534,68 @@ def create(model_name: None | str = None, model: None | str | Model = None,
                                              dataset.name)
     return ModelType(name=model_name, dataset=dataset, dataset_name=dataset_name, **result)
 
+# def load(model_name: None | str = None, model: None | str | Model = None,
+#            dataset_name: None | str = None, dataset: None | str | Dataset = None,
+#            config: Config = config,
+#            class_dict: dict[str, type[Model]] = {},
+#            **kwargs) -> Model:
+#     r"""
+#     | Create a model instance.
+#     | For arguments not included in :attr:`kwargs`,
+#       use the default values in :attr:`config`.
+#     | The default value of :attr:`folder_path` is
+#       ``'{model_dir}/{dataset.data_type}/{dataset.name}'``.
+#     | For model implementation, see :class:`Model`.
+
+#     Args:
+#         model_name (str): The model name.
+#         model (str | Model): The model instance or model name
+#             (as the alias of `model_name`).
+#         dataset_name (str): The dataset name.
+#         dataset (str | trojanzoo.datasets.Dataset):
+#             Dataset instance or dataset name
+#             (as the alias of `dataset_name`).
+#         config (Config): The default parameter config.
+#         class_dict (dict[str, type[Model]]):
+#             Map from model name to model class.
+#             Defaults to ``{}``.
+#         **kwargs: The keyword arguments
+#             passed to model init method.
+
+#     Returns:
+#         Model: The model instance.
+#     """
+#     dataset_name = get_name(
+#         name=dataset_name, module=dataset, arg_list=['-d', '--dataset'])
+#     model_name = get_name(name=model_name, module=model,
+#                           arg_list=['-m', '--model'])
+#     if dataset_name is None:
+#         dataset_name = config.full_config['dataset']['default_dataset']
+#     if model_name is None:
+#         model_name = config.get_config(dataset_name=dataset_name)[
+#             'model']['default_model']
+#     result = config.get_config(dataset_name=dataset_name)[
+#         'model'].update(kwargs)
+#     model_name = model_name if model_name is not None \
+#         else result['default_model']
+
+#     name_list = [name for sub_list in get_available_models(
+#         class_dict=class_dict).values()
+#         for name in sub_list]
+#     name_list = sorted(name_list)
+#     assert model_name in name_list, f'{model_name} not in \n{name_list}'
+#     model_class_name = get_model_class(model_name, class_dict=class_dict)
+#     try:
+#         ModelType = class_dict[model_class_name]
+#     except KeyError:
+#         print(f'{model_class_name} not in \n{list(class_dict.keys())}')
+#         raise
+
+#     if 'folder_path' not in result.keys() and isinstance(dataset, Dataset):
+#         result['folder_path'] = os.path.join(result['model_dir'],
+#                                              dataset.data_type,
+#                                              dataset.name)
+#     return ModelType(name=model_name, dataset=dataset, dataset_name=dataset_name, **result)
 
 def output_available_models(class_dict: dict[str, type[Model]] = {},
                             indent: int = 0) -> None:
