@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --validate_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --arch_unrolled --layers 8 --init_channels 16 --batch_size 180 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --arch_unrolled --layers 8 --init_channels 16 --batch_size 64 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save
+CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --validate_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --batch_size 128 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save
+
 """  # noqa: E501
   
 from cProfile import label
@@ -344,6 +344,7 @@ class TEA_DARTS(ImageModel):
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                 if mode == 'train':
                     _soft_label = tea_forward_fn(_input,**kwargs)
+                    _soft_label.requires_grad = False
                     # data_valid = next(self.valid_iterator)
                     # input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
                     self.arch_optimizer.zero_grad()
