@@ -126,13 +126,16 @@ def distillation(module: nn.Module, num_classes: int,
         for i, data in enumerate(loader_epoch):
             _iter = _epoch * len_loader_train + i
             # data_time.update(time.perf_counter() - end)
-            _input, _label, _soft_label = get_data_fn(data, mode='train')
+            optimizer.zero_grad()
+
+            _input, _label, _soft_label, soft_loss_fn = get_data_fn(data, mode='train')
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
             soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
+            optimizer.zero_grad()
             _output = forward_fn(_input, amp=amp, parallel=True)
-            loss = soft_loss_fn(soft_target, _output)
+            loss = soft_loss_fn(_input, soft_target,_output)
             if backward_and_step:
                 optimizer.zero_grad()
                 if amp:
