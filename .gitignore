@@ -45,7 +45,8 @@ useless
 /bash
 /configs
 /cmd_config
-/data
+/data/data/image
+/data/model/data/image
 /tex
 
 # test file
