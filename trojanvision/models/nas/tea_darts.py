@@ -7,7 +7,7 @@ CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --validate_interv
   
 from cProfile import label
 import trojanvision.utils.model_archs.darts as darts
-
+import torch.nn.functional as F
 from trojanvision.models.nas.darts import DARTS
 
 from trojanvision.datasets import ImageSet
@@ -220,11 +220,12 @@ class TEA_DARTS(ImageModel):
              soft_output: torch.Tensor = None, amp: bool = False, **kwargs) -> torch.Tensor:
         if soft_output is None:
             soft_output = self(_input, **kwargs)
+        temp = 5.0
         criterion = nn.KLDivLoss(reduction='batchmean')
         if amp:
             with torch.cuda.amp.autocast():
-                return criterion(soft_output, soft_target)
-        return criterion(soft_output, soft_target), soft_output
+                return criterion(F.log_softmax(soft_output/temp,dim=1),F.softmax(soft_target/temp,dim=1))
+        return criterion(F.log_softmax(soft_output/temp,dim=1),F.softmax(soft_target/temp,dim=1))
 
     #     return criterion(_output, _label)
     #     soft_loss = nn.KLDivLoss(reduction='batchmean')

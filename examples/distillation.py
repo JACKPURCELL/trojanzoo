@@ -44,7 +44,7 @@ if __name__ == '__main__':
     if env['verbose']:
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
-    # acc, loss = tea_model._validate()
+    acc, loss = tea_model._validate()
     model._distillation(tea_forward_fn=tea_model.__call__,**trainer)
 
     # kwargs['model_name'] = 'tea_darts'
@@ -53,16 +53,16 @@ if __name__ == '__main__':
     #....................
     # Used for python interactive window
 
-    parser = argparse.ArgumentParser()
-    trojanvision.environ.add_argument(parser)
-    trojanvision.datasets.add_argument(parser)
-    trojanvision.models.add_argument(parser)
-    kwargs = parser.parse_args().__dict__
+    # parser = argparse.ArgumentParser()
+    # trojanvision.environ.add_argument(parser)
+    # trojanvision.datasets.add_argument(parser)
+    # trojanvision.models.add_argument(parser)
+    # kwargs = parser.parse_args().__dict__
 
-    env = trojanvision.environ.create(**kwargs)
-    dataset = trojanvision.datasets.create(**kwargs)
-    model = trojanvision.models.create(dataset=dataset, **kwargs)
+    # env = trojanvision.environ.create(**kwargs)
+    # dataset = trojanvision.datasets.create(**kwargs)
+    # model = trojanvision.models.create(dataset=dataset, **kwargs)
 
-    if env['verbose']:
-        trojanvision.summary(env=env, dataset=dataset, model=model)
-    acc, loss = model._validate()
+    # if env['verbose']:
+    #     trojanvision.summary(env=env, dataset=dataset, model=model)
+    # acc, loss = model._validate()
