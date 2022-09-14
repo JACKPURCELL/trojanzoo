@@ -349,16 +349,21 @@ class TEA_DARTS(ImageModel):
 
                     # data_valid = next(self.valid_iterator)
                     # input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
+                    optimizer.zero_grad()
                     self.arch_optimizer.zero_grad()
 
 
                     if self.arch_unrolled:# here is backward the a
                         self._backward_step_unrolled(_input, _label, _soft_label)
                     else:
-                        loss = self.soft_loss(_input, _soft_label)
-                        loss.backward(inputs=self.arch_parameters())
+                        _output = self(_input, **kwargs)
+                        loss = self.soft_loss(_input, _soft_label, _output)
+                        # loss.backward(inputs=self.arch_parameters())
+                        loss.backward()
                     self.arch_optimizer.step()
-                    return _input, _label, _soft_label, self.soft_loss
+                    optimizer.step()
+
+                    return _input, _label, _soft_label, loss, _output
                 elif mode =='valid':
                     return _input, _label
 

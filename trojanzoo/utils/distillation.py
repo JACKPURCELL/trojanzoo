@@ -126,18 +126,18 @@ def distillation(module: nn.Module, num_classes: int,
         for i, data in enumerate(loader_epoch):
             _iter = _epoch * len_loader_train + i
             # data_time.update(time.perf_counter() - end)
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
 
-            _input, _label, _soft_label, soft_loss_fn = get_data_fn(data, mode='train')
+            _input, _label, _soft_label, loss, _output = get_data_fn(data, mode='train')
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
-            soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
-            optimizer.zero_grad()
-            _output = forward_fn(_input, amp=amp, parallel=True)
-            loss = soft_loss_fn(_input, soft_target,_output)
+            # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
+            # optimizer.zero_grad()
+            # _output = forward_fn(_input, amp=amp, parallel=True)
+            # loss = soft_loss_fn(_input, soft_target,_output)
             if backward_and_step:
-                optimizer.zero_grad()
+                # optimizer.zero_grad()
                 if amp:
                     scaler.scale(loss).backward()
                     if callable(after_loss_fn) or grad_clip is not None:
@@ -155,7 +155,7 @@ def distillation(module: nn.Module, num_classes: int,
                     scaler.update()
                 else:
                     #backward the weights 
-                    loss.backward()
+                    # loss.backward()
                     if callable(after_loss_fn):#miss
                         after_loss_fn(_input=_input, _label=_label,
                                       _output=_output,
@@ -169,7 +169,7 @@ def distillation(module: nn.Module, num_classes: int,
                         pre_conditioner.step()
                     if grad_clip is not None:
                         nn.utils.clip_grad_norm_(params, grad_clip)
-                    optimizer.step()
+                    # optimizer.step()
 
             if model_ema and i % model_ema_steps == 0:
                 model_ema.update_parameters(module)
