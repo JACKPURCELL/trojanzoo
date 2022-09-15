@@ -1,0 +1,1978 @@
+Trainer
+          optim_args
+          {'epochs': '50', 'lr': '0.025', 'parameters': 'full', 'OptimType': 'SGD', 'momentum': '0.9', 'weight_decay': '
+0.0005', 'lr_warmup_epochs': '0', 'lr_scheduler': 'True', 'lr_min': '0.001'}
+          --------------------
+          train_args
+          {'validate_interval': '1', 'model_ema_steps': '1', 'amp': 'False', 'grad_clip': '5.0', 'save': 'True', 'epochs
+': '50', 'lr_warmup_epochs': '0'}
+          --------------------
+          optimizer
+          SGD (
+          Parameter Group 0
+              dampening: 0
+              foreach: None
+              initial_lr: 0.025
+              lr: 0.025
+              maximize: False
+              momentum: 0.9
+              nesterov: False
+              weight_decay: 0.0005
+          )
+          --------------------
+          lr_scheduler
+          <torch.optim.lr_scheduler.CosineAnnealingLR object at 0x7f1375704670>
+          --------------------
+------------------------------
+
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '100', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10'
+, 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+darts_supernet                 Parameters:
+DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+Validate                      loss: 0.607         top1: 87.270        top5: 99.380        time: 00:12
+Genotype(normal=[('sep_conv_3x3', 0), ('avg_pool_3x3', 1), ('dil_conv_3x3', 1), ('skip_connect', 2), ('max_pool_3x3', 1)
+, ('dil_conv_5x5', 0), ('skip_connect', 3), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('skip_connect', 0)
+, ('sep_conv_5x5', 1), ('skip_connect', 1), ('sep_conv_5x5', 2), ('max_pool_3x3', 1), ('avg_pool_3x3', 2), ('avg_pool_3x
+3', 3), ('skip_connect', 1)], reduce_concat=range(2, 6))
+Validate                      loss: 2.303         top1: 9.180         top5: 50.000        time: 00:12
+^C^CTraceback (most recent call last):
+  File "/home/jkl6486/trojanzoo/examples/distillation.py", line 39, in <module>
+    model._distillation(tea_forward_fn=tea_model.__call__,**trainer)
+  File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 383, in _distillation
+    return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+  File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 650, in _distillation
+    return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+  File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1055, in _distillation
+    return distillation(module=self._model, num_classes=self.num_classes,
+  File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 131, in distillation
+    _input, _label, _soft_label, loss, _output = get_data_fn(data, mode='train')
+  File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 362, in get_data
+    loss.backward()
+  File "/home/jkl6486/miniconda3/envs/trojanzoo/lib/python3.10/site-packages/torch/_tensor.py", line 396, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/home/jkl6486/miniconda3/envs/trojanzoo/lib/python3.10/site-packages/torch/autograd/__init__.py", line 173, in b
+ackward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt
+
+(trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ ^C
+(trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ git pull
+remote: Enumerating objects: 13, done.
+remote: Counting objects: 100% (13/13), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 13 (delta 11), reused 13 (delta 11), pack-reused 0
+Unpacking objects: 100% (13/13), 4.40 KiB | 346.00 KiB/s, done.
+From https://github.com/JACKPURCELL/trojanzoo
+   9db2958..367f3ff  main       -> origin/main
+Updating 9db2958..367f3ff
+Fast-forward
+ examples/distillation.py             |  2 +-
+ trojanvision/models/imagemodel.py    | 17 +++++++++++++++--
+ trojanvision/models/nas/tea_darts.py |  4 ++--
+ trojanzoo/models.py                  | 16 ++++++++++++----
+ trojanzoo/utils/distillation.py      | 15 +++++++++++----
+ 5 files changed, 41 insertions(+), 13 deletions(-)
+(trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ CUDA_VISIBLE_DEVICES=3 python examples/distillation.py --color --valida
+te_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --b
+atch_size 96 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 100 --save --download
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '96', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10',
+ 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+tea_darts_supernet             Parameters:
+TEA_DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+trainer
+trainer                        Parameters:
+Trainer
+          optim_args
+          {'epochs': '100', 'lr': '0.025', 'parameters': 'full', 'OptimType': 'SGD', 'momentum': '0.9', 'weight_decay':
+'0.0005', 'lr_warmup_epochs': '0', 'lr_scheduler': 'True', 'lr_min': '0.001'}
+          --------------------
+          train_args
+          {'validate_interval': '1', 'model_ema_steps': '1', 'amp': 'False', 'grad_clip': '5.0', 'save': 'True', 'epochs
+': '100', 'lr_warmup_epochs': '0'}
+          --------------------
+          optimizer
+          SGD (
+          Parameter Group 0
+              dampening: 0
+              foreach: None
+              initial_lr: 0.025
+              lr: 0.025
+              maximize: False
+              momentum: 0.9
+              nesterov: False
+              weight_decay: 0.0005
+          )
+          --------------------
+          lr_scheduler
+          <torch.optim.lr_scheduler.CosineAnnealingLR object at 0x7f0f5a89c8e0>
+          --------------------
+------------------------------
+
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '96', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10',
+ 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+darts_supernet                 Parameters:
+DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+Validate                      loss: 0.607         top1: 87.270        top5: 99.380        time: 00:12
+Genotype(normal=[('sep_conv_3x3', 0), ('avg_pool_3x3', 1), ('dil_conv_3x3', 1), ('skip_connect', 2), ('max_pool_3x3', 1)
+, ('dil_conv_5x5', 0), ('skip_connect', 3), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('skip_connect', 0)
+, ('sep_conv_5x5', 1), ('skip_connect', 1), ('sep_conv_5x5', 2), ('max_pool_3x3', 1), ('avg_pool_3x3', 2), ('avg_pool_3x
+3', 3), ('skip_connect', 1)], reduce_concat=range(2, 6))
+Validate                      loss: 2.303         top1: 9.180         top5: 50.000        time: 00:12
+alphas_normal:  tensor([0.6784, 1.4181, 0.4193, 1.2672, 1.4540, 0.4332, 1.2629, 1.3296, 1.6443,
+        0.4855, 1.3164, 1.4671, 1.6549, 1.9706], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2001, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4069, 0.3576, 0.7107, 0.4038, 0.6285, 0.6747, 0.5772, 0.3740, 0.6653,
+        0.9748, 0.1689, 0.4044, 0.5985, 0.7403], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5490, device='cuda:0', grad_fn=<MeanBackward0>)
+Epoch: [   1 / 100 ]          loss: 0.744         top1: 39.664        top5: 88.580        time: 03:47
+Genotype(normal=[('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 0)
+, ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('dil_conv_5x5', 1), ('max_pool_3x3', 3), ('max_pool_3x3', 1), ('max_pool_3x
+3', 3), ('max_pool_3x3', 4)], reduce_concat=range(2, 6))
+Validate                      loss: 3.068         top1: 48.690        top5: 91.230        time: 00:12
+Traceback (most recent call last):
+  File "/home/jkl6486/trojanzoo/examples/distillation.py", line 39, in <module>
+    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_parameters=tea_arch_parameters, **trainer)
+  File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 383, in _distillation
+    return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+  File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 652, in _distillation
+    return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+  File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1056, in _distillation
+    return distillation(module=self._model, num_classes=self.num_classes,
+  File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 208, in distillation
+    validate_result = validate_fn(module=module,
+  File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 378, in _validate
+    return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+  File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 674, in _dis_validate
+    return super()._dis_validate(stu_arch_parameters=stu_arch_parameters, **kwargs)
+  File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1101, in _dis_validate
+    return dis_validate(module=module, num_classes=num_classes, loader=loader,
+  File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 279, in dis_validate
+    normal_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
+TypeError: 'NoneType' object is not subscriptable
+(trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ CUDA_VISIBLE_DEVICES=3 python examples/distillation.py --color --valida
+te_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --b
+atch_size 96 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 100 --save --download
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '96', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10',
+ 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+tea_darts_supernet             Parameters:
+TEA_DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+trainer
+trainer                        Parameters:
+Trainer
+          optim_args
+          {'epochs': '100', 'lr': '0.025', 'parameters': 'full', 'OptimType': 'SGD', 'momentum': '0.9', 'weight_decay':
+'0.0005', 'lr_warmup_epochs': '0', 'lr_scheduler': 'True', 'lr_min': '0.001'}
+          --------------------
+          train_args
+          {'validate_interval': '1', 'model_ema_steps': '1', 'amp': 'False', 'grad_clip': '5.0', 'save': 'True', 'epochs
+': '100', 'lr_warmup_epochs': '0'}
+          --------------------
+          optimizer
+          SGD (
+          Parameter Group 0
+              dampening: 0
+              foreach: None
+              initial_lr: 0.025
+              lr: 0.025
+              maximize: False
+              momentum: 0.9
+              nesterov: False
+              weight_decay: 0.0005
+          )
+          --------------------
+          lr_scheduler
+          <torch.optim.lr_scheduler.CosineAnnealingLR object at 0x7fcbdede4730>
+          --------------------
+------------------------------
+
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '96', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10',
+ 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+darts_supernet                 Parameters:
+DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+Validate                      loss: 0.607         top1: 87.270        top5: 99.380        time: 00:12
+Genotype(normal=[('sep_conv_3x3', 0), ('avg_pool_3x3', 1), ('dil_conv_3x3', 1), ('skip_connect', 2), ('max_pool_3x3', 1)
+, ('dil_conv_5x5', 0), ('skip_connect', 3), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('skip_connect', 0)
+, ('sep_conv_5x5', 1), ('skip_connect', 1), ('sep_conv_5x5', 2), ('max_pool_3x3', 1), ('avg_pool_3x3', 2), ('avg_pool_3x
+3', 3), ('skip_connect', 1)], reduce_concat=range(2, 6))
+Validate                      loss: 2.303         top1: 9.180         top5: 50.000        time: 00:12
+tensor([[ 2.5248e-01, -1.2402e-01,  4.1077e-01,  1.7380e-01, -3.6342e-01,
+         -1.0391e-01, -1.7246e-01, -1.0055e-01],
+        [-5.0962e-01, -5.1276e-01, -1.8770e-01, -1.2459e-01, -1.4323e-01,
+          2.2525e-01, -2.1501e-02,  1.1680e+00],
+        [-8.6897e-03, -2.9488e-01,  1.7482e-01,  1.7424e-01, -1.0994e-01,
+          1.0322e-01, -7.2004e-02,  1.8181e-02],
+        [-5.2076e-01, -4.5790e-01, -7.1233e-02, -3.5483e-02, -2.8599e-01,
+          3.5249e-01,  8.9487e-02,  9.5111e-01],
+        [-5.5401e-01, -3.5011e-01, -6.3678e-02, -2.0350e-01, -3.8068e-01,
+          1.9257e-01, -1.4815e-02,  1.2063e+00],
+        [-1.2814e-01, -3.4631e-01,  6.5443e-02,  1.7192e-01,  2.9206e-02,
+          2.8219e-02, -8.1966e-03,  1.2399e-01],
+        [-4.2776e-01, -3.8145e-01,  1.3744e-04, -2.1501e-01, -1.9681e-01,
+          5.8288e-02,  6.1504e-02,  1.0831e+00],
+        [-5.7789e-01, -3.9334e-01, -1.1491e-01, -2.3721e-03, -2.9253e-01,
+          1.2213e-01,  2.3315e-02,  1.0791e+00],
+        [-6.6628e-01, -5.3694e-01, -3.4782e-01, -3.7249e-02, -3.6747e-01,
+          1.8863e-01,  3.2661e-03,  1.2947e+00],
+        [ 9.0608e-02, -3.8039e-01,  6.6850e-02,  1.1955e-01, -1.3962e-01,
+          1.6968e-02,  5.2428e-02,  2.0230e-01],
+        [-4.0566e-01, -5.3867e-01, -1.8542e-01,  3.3811e-02, -1.8301e-01,
+          2.1440e-02,  8.6015e-02,  1.0946e+00],
+        [-5.5697e-01, -4.6902e-01, -1.6730e-01, -3.2126e-01, -1.6234e-01,
+          1.2478e-01,  9.9280e-02,  1.1996e+00],
+        [-6.2801e-01, -5.7108e-01, -2.9522e-01, -2.7725e-01, -2.5855e-01,
+          7.6648e-02,  5.5023e-03,  1.3355e+00],
+        [-8.3142e-01, -8.3997e-01, -6.7955e-01, -1.1583e-01, -1.9267e-01,
+          1.2679e-02,  2.0840e-01,  1.3910e+00]], device='cuda:0',
+       requires_grad=True)
+tensor([[-2.8488e-04,  9.2538e-04, -2.7184e-04,  1.6043e-03, -4.5595e-04,
+          2.1053e-04, -9.4933e-05, -1.5732e-03],
+        [ 6.9527e-05,  1.8265e-03, -2.9411e-04,  5.1828e-04,  8.1693e-05,
+          1.7809e-03, -1.0047e-03, -2.3235e-04],
+        [-4.0875e-04, -9.6585e-04, -1.5480e-03, -5.5812e-04, -2.0398e-03,
+         -6.3232e-05, -1.1872e-03, -7.2819e-04],
+        [-2.8791e-04, -3.9721e-04, -1.0382e-03, -9.3970e-04,  1.0278e-04,
+          8.0762e-04, -2.5927e-04, -7.0272e-04],
+        [ 9.3928e-04, -8.9533e-04,  1.2359e-03,  2.3511e-04, -1.7230e-04,
+          1.1648e-03, -3.4360e-04, -6.5601e-04],
+        [ 2.7345e-04,  5.5811e-04, -1.0112e-03,  2.2287e-04,  2.5956e-04,
+         -1.3916e-03,  1.3581e-03,  8.2814e-04],
+        [ 1.8307e-03,  8.6062e-04,  4.7462e-04, -1.2372e-03,  4.0194e-04,
+         -4.2794e-05, -2.0584e-04,  2.5381e-04],
+        [-1.5039e-03,  3.5264e-04,  1.0354e-03,  3.4779e-04,  3.0273e-04,
+          1.1491e-03, -1.1029e-04, -8.5095e-04],
+        [-8.5554e-04,  2.0484e-04, -4.0445e-04, -4.2445e-05,  2.6794e-04,
+         -5.7941e-04, -7.7386e-04, -1.1573e-03],
+        [ 4.1301e-04, -6.4251e-04, -7.1486e-04, -4.4901e-05,  1.2623e-03,
+         -7.4154e-05,  1.6899e-04, -1.8063e-03],
+        [-4.7637e-04,  1.6650e-04,  6.6203e-04, -7.4819e-05,  1.3722e-03,
+         -1.5209e-03, -1.5192e-03, -1.0302e-03],
+        [-1.2864e-03,  2.8475e-04, -9.0627e-05, -5.2111e-04,  3.2196e-04,
+          1.0765e-03, -1.1387e-03, -6.8831e-04],
+        [-2.6650e-04, -3.4502e-04,  2.1149e-03, -1.0556e-03, -4.5143e-06,
+         -1.4521e-04,  7.8627e-04,  8.0574e-04],
+        [-6.3907e-04,  2.3400e-04,  8.3340e-04,  4.0710e-04, -1.3756e-03,
+          4.1629e-04, -3.5534e-04,  1.6574e-03]], device='cuda:0',
+       requires_grad=True)
+alphas_normal:  tensor([0.6784, 1.4181, 0.4193, 1.2672, 1.4540, 0.4332, 1.2629, 1.3296, 1.6443,
+        0.4855, 1.3164, 1.4671, 1.6549, 1.9706], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2001, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4069, 0.3576, 0.7107, 0.4038, 0.6285, 0.6747, 0.5772, 0.3740, 0.6653,
+        0.9748, 0.1689, 0.4044, 0.5985, 0.7403], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5490, device='cuda:0', grad_fn=<MeanBackward0>)
+Epoch: [   1 / 100 ]          loss: 0.747         top1: 39.644        top5: 88.496        time: 03:54
+Genotype(normal=[('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 0)
+, ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('dil_conv_5x5', 1), ('max_pool_3x3', 3), ('sep_conv_5x5', 2), ('max_pool_3x
+3', 3), ('max_pool_3x3', 0)], reduce_concat=range(2, 6))
+Validate                      loss: 3.013         top1: 48.200        top5: 91.920        time: 00:13
+Traceback (most recent call last):
+  File "/home/jkl6486/trojanzoo/examples/distillation.py", line 39, in <module>
+    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_parameters=tea_arch_parameters, **trainer)
+  File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 383, in _distillation
+    return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+  File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 652, in _distillation
+    return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+  File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1056, in _distillation
+    return distillation(module=self._model, num_classes=self.num_classes,
+  File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 208, in distillation
+    validate_result = validate_fn(module=module,
+  File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 378, in _validate
+    return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+  File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 674, in _dis_validate
+    return super()._dis_validate(stu_arch_parameters=stu_arch_parameters, **kwargs)
+  File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1101, in _dis_validate
+    return dis_validate(module=module, num_classes=num_classes, loader=loader,
+  File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 279, in dis_validate
+    print(tea_arch_parameters[0])
+TypeError: 'NoneType' object is not subscriptable
+(trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ CUDA_VISIBLE_DEVICES=3 python examples/distillation.py --color --valida
+te_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --b
+atch_size 96 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 100 --save --download
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '96', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10',
+ 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+tea_darts_supernet             Parameters:
+TEA_DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+trainer
+trainer                        Parameters:
+Trainer
+          optim_args
+          {'epochs': '100', 'lr': '0.025', 'parameters': 'full', 'OptimType': 'SGD', 'momentum': '0.9', 'weight_decay':
+'0.0005', 'lr_warmup_epochs': '0', 'lr_scheduler': 'True', 'lr_min': '0.001'}
+          --------------------
+          train_args
+          {'validate_interval': '1', 'model_ema_steps': '1', 'amp': 'False', 'grad_clip': '5.0', 'save': 'True', 'epochs
+': '100', 'lr_warmup_epochs': '0'}
+          --------------------
+          optimizer
+          SGD (
+          Parameter Group 0
+              dampening: 0
+              foreach: None
+              initial_lr: 0.025
+              lr: 0.025
+              maximize: False
+              momentum: 0.9
+              nesterov: False
+              weight_decay: 0.0005
+          )
+          --------------------
+          lr_scheduler
+          <torch.optim.lr_scheduler.CosineAnnealingLR object at 0x7fbd8f49c730>
+          --------------------
+------------------------------
+
+env
+P{'default': None, 'device': device(type='cuda'), 'seed': 1228, 'data_seed': 1228, 'verbose': 1, 'color': True, 'tqdm':
+False, 'cudnn_benchmark': False, 'num_gpus': 1, 'world_size': 1}
+------------------------------
+
+dataset
+cifar10                        Parameters:
+CIFAR10
+          verbose
+          {'indent': '0'}
+          --------------------
+          dataset
+          {'num_classes': '10', 'batch_size': '96', 'valid_batch_size': '100', 'folder_path': 'data/data/image/cifar10',
+ 'num_workers': '0'}
+          --------------------
+          imageset
+          {'data_shape': '[3, 32, 32]', 'norm_par': "{'mean': [0.49139968, 0.48215827, 0.44653124], 'std': [0.24703233,
+0.24348505, 0.26158768]}", 'normalize': 'False', 'transform': 'None', 'auto_augment': 'False'}
+          --------------------
+------------------------------
+
+model
+darts_supernet                 Parameters:
+DARTS
+          verbose
+          {'indent': '0'}
+          --------------------
+          model
+          {'folder_path': 'data/model/image/cifar10'}
+          --------------------
+          darts
+          {'supernet': 'True', 'layers': '8', 'init_channels': '16'}
+          --------------------
+          arch_search
+          {'use_full_train_set': 'False', 'arch_optimizer': 'Adam ('}
+          --------------------
+          preprocess    Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768])
+          features      FeatureExtractor
+          pool          AdaptiveAvgPool2d(output_size=(1, 1))
+          flatten       Flatten(start_dim=1, end_dim=-1)
+          classifier    Sequential
+          --------------------
+------------------------------
+
+Validate                      loss: 0.607         top1: 87.270        top5: 99.380        time: 00:12
+Genotype(normal=[('sep_conv_3x3', 0), ('avg_pool_3x3', 1), ('dil_conv_3x3', 1), ('skip_connect', 2), ('max_pool_3x3', 1)
+, ('dil_conv_5x5', 0), ('skip_connect', 3), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('skip_connect', 0)
+, ('sep_conv_5x5', 1), ('skip_connect', 1), ('sep_conv_5x5', 2), ('max_pool_3x3', 1), ('avg_pool_3x3', 2), ('avg_pool_3x
+3', 3), ('skip_connect', 1)], reduce_concat=range(2, 6))
+Validate                      loss: 2.303         top1: 9.180         top5: 50.000        time: 00:12
+alphas_normal:  tensor([0.6784, 1.4181, 0.4193, 1.2672, 1.4540, 0.4332, 1.2629, 1.3296, 1.6443,
+        0.4855, 1.3164, 1.4671, 1.6549, 1.9706], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2001, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4069, 0.3576, 0.7107, 0.4038, 0.6285, 0.6747, 0.5772, 0.3740, 0.6653,
+        0.9748, 0.1689, 0.4044, 0.5985, 0.7403], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5490, device='cuda:0', grad_fn=<MeanBackward0>)
+Epoch: [   1 / 100 ]          loss: 0.744         top1: 39.684        top5: 88.584        time: 03:47
+Genotype(normal=[('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 0)
+, ('sep_conv_3x3', 1), ('max_pool_3x3', 0), ('dil_conv_5x5', 1), ('max_pool_3x3', 3), ('sep_conv_5x5', 2), ('max_pool_3x
+3', 3), ('max_pool_3x3', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 2.996         top1: 49.030        top5: 92.880        time: 00:12
+alphas_normal:  tensor([0.6486, 1.4646, 0.4228, 1.3139, 1.4916, 0.4591, 1.2991, 1.3706, 1.6971,
+        0.4902, 1.3667, 1.5130, 1.7095, 2.0373], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2346, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4024, 0.3515, 0.7060, 0.4058, 0.6334, 0.6876, 0.5666, 0.3929, 0.6701,
+        0.9806, 0.1691, 0.4163, 0.6160, 0.7621], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5543, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 49.030    Previous Best Acc: 9.180
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [   2 / 100 ]          loss: 0.487         top1: 57.344        top5: 95.176        time: 03:46
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('max_pool_3x3', 3), ('sep_conv_5x5', 2), ('max_pool_3x
+3', 3), ('sep_conv_5x5', 4)], reduce_concat=range(2, 6))
+Validate                      loss: 4.542         top1: 48.370        top5: 92.950        time: 00:12
+alphas_normal:  tensor([0.6487, 1.4841, 0.4195, 1.3314, 1.5082, 0.4459, 1.3119, 1.3808, 1.7120,
+        0.4750, 1.3745, 1.5270, 1.7260, 2.0595], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2432, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4104, 0.3526, 0.7168, 0.4126, 0.6645, 0.6972, 0.5756, 0.3943, 0.6847,
+        1.0048, 0.1789, 0.4336, 0.6271, 0.7792], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5666, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [   3 / 100 ]          loss: 0.383         top1: 64.616        top5: 96.708        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('max_pool_3x3', 3), ('sep_conv_5x
+5', 4), ('dil_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 1.842         top1: 66.450        top5: 96.860        time: 00:12
+alphas_normal:  tensor([0.6547, 1.4926, 0.4175, 1.3346, 1.5146, 0.4373, 1.3152, 1.3814, 1.7206,
+        0.4662, 1.3690, 1.5309, 1.7299, 2.0622], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2448, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4188, 0.3559, 0.7211, 0.4133, 0.6860, 0.7043, 0.5931, 0.3910, 0.7012,
+        1.0158, 0.1859, 0.4443, 0.6379, 0.7953], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5760, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 66.450    Previous Best Acc: 49.030
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [   4 / 100 ]          loss: 0.312         top1: 70.240        top5: 97.664        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('dil_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('dil_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 2.187         top1: 66.300        top5: 97.180        time: 00:12
+alphas_normal:  tensor([0.6565, 1.5031, 0.4137, 1.3416, 1.5188, 0.4299, 1.3259, 1.3809, 1.7286,
+        0.4586, 1.3684, 1.5322, 1.7332, 2.0686], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2471, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4271, 0.3610, 0.7264, 0.4205, 0.6986, 0.7168, 0.6035, 0.3972, 0.7162,
+        1.0310, 0.1865, 0.4557, 0.6491, 0.8104], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5857, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [   5 / 100 ]          loss: 0.265         top1: 73.772        top5: 98.260        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_3x3', 3), ('sep_conv_5x
+5', 4), ('dil_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 3.213         top1: 58.030        top5: 95.330        time: 00:12
+alphas_normal:  tensor([0.6593, 1.5072, 0.4146, 1.3381, 1.5230, 0.4247, 1.3247, 1.3787, 1.7271,
+        0.4521, 1.3596, 1.5301, 1.7311, 2.0659], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2454, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4352, 0.3661, 0.7321, 0.4208, 0.7088, 0.7283, 0.6106, 0.3972, 0.7312,
+        1.0414, 0.1928, 0.4643, 0.6579, 0.8182], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5932, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [   6 / 100 ]          loss: 0.228         top1: 77.180        top5: 98.500        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_3x3', 3), ('sep_conv_5x
+5', 4), ('dil_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 1.386         top1: 74.410        top5: 98.460        time: 00:12
+alphas_normal:  tensor([0.6649, 1.5128, 0.4141, 1.3391, 1.5236, 0.4230, 1.3279, 1.3825, 1.7328,
+        0.4490, 1.3499, 1.5291, 1.7301, 2.0655], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2460, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4436, 0.3670, 0.7353, 0.4253, 0.7210, 0.7368, 0.6222, 0.4048, 0.7440,
+        1.0482, 0.1981, 0.4698, 0.6595, 0.8299], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6004, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 74.410    Previous Best Acc: 66.450
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [   7 / 100 ]          loss: 0.200         top1: 78.796        top5: 98.800        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_3x3', 3), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.482         top1: 74.040        top5: 97.760        time: 00:12
+alphas_normal:  tensor([0.6689, 1.5136, 0.4145, 1.3361, 1.5220, 0.4194, 1.3262, 1.3788, 1.7281,
+        0.4465, 1.3404, 1.5266, 1.7274, 2.0609], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2435, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4542, 0.3682, 0.7439, 0.4284, 0.7277, 0.7469, 0.6325, 0.4103, 0.7574,
+        1.0548, 0.2014, 0.4709, 0.6631, 0.8391], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6071, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [   8 / 100 ]          loss: 0.180         top1: 80.812        top5: 98.860        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_3x3', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 1)], reduce_concat=range(2, 6))
+Validate                      loss: 1.375         top1: 76.370        top5: 98.610        time: 00:12
+alphas_normal:  tensor([0.6798, 1.5180, 0.4156, 1.3365, 1.5255, 0.4166, 1.3288, 1.3814, 1.7295,
+        0.4439, 1.3354, 1.5248, 1.7265, 2.0619], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2446, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4601, 0.3715, 0.7462, 0.4325, 0.7342, 0.7546, 0.6336, 0.4108, 0.7675,
+        1.0595, 0.2071, 0.4771, 0.6686, 0.8469], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6122, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 76.370    Previous Best Acc: 74.410
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [   9 / 100 ]          loss: 0.165         top1: 81.984        top5: 99.132        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_3x3', 3), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 2.043         top1: 69.970        top5: 97.810        time: 00:12
+alphas_normal:  tensor([0.6848, 1.5140, 0.4167, 1.3302, 1.5250, 0.4172, 1.3249, 1.3795, 1.7266,
+        0.4418, 1.3273, 1.5206, 1.7257, 2.0591], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2424, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4621, 0.3684, 0.7464, 0.4367, 0.7406, 0.7594, 0.6398, 0.4177, 0.7775,
+        1.0631, 0.2117, 0.4815, 0.6722, 0.8528], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6164, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  10 / 100 ]          loss: 0.154         top1: 83.060        top5: 99.128        time: 03:43
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_3x3', 3), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 1.119         top1: 78.830        top5: 98.230        time: 00:12
+alphas_normal:  tensor([0.6883, 1.5127, 0.4196, 1.3284, 1.5258, 0.4153, 1.3224, 1.3781, 1.7284,
+        0.4381, 1.3225, 1.5161, 1.7250, 2.0563], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2412, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4699, 0.3743, 0.7474, 0.4391, 0.7463, 0.7603, 0.6469, 0.4130, 0.7775,
+        1.0648, 0.2109, 0.4807, 0.6738, 0.8590], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6189, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 78.830    Previous Best Acc: 76.370
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  11 / 100 ]          loss: 0.142         top1: 84.232        top5: 99.284        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1)
+, ('sep_conv_5x5', 3), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.133         top1: 78.900        top5: 98.890        time: 00:12
+alphas_normal:  tensor([0.6958, 1.5108, 0.4200, 1.3263, 1.5250, 0.4130, 1.3227, 1.3785, 1.7261,
+        0.4393, 1.3178, 1.5130, 1.7206, 2.0508], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2400, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4786, 0.3742, 0.7518, 0.4423, 0.7557, 0.7647, 0.6489, 0.4187, 0.7832,
+        1.0705, 0.2086, 0.4852, 0.6782, 0.8629], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6231, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 78.900    Previous Best Acc: 78.830
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  12 / 100 ]          loss: 0.136         top1: 84.688        top5: 99.376        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('sep_conv_5x5', 3)
+, ('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.141         top1: 78.290        top5: 98.470        time: 00:12
+alphas_normal:  tensor([0.7049, 1.5089, 0.4200, 1.3208, 1.5253, 0.4103, 1.3208, 1.3770, 1.7244,
+        0.4405, 1.3117, 1.5097, 1.7194, 2.0489], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2388, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4857, 0.3745, 0.7582, 0.4444, 0.7620, 0.7677, 0.6521, 0.4249, 0.7856,
+        1.0719, 0.2133, 0.4851, 0.6816, 0.8617], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6263, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  13 / 100 ]          loss: 0.126         top1: 86.116        top5: 99.376        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('sep_conv_5x5', 3)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.984         top1: 81.470        top5: 98.940        time: 00:12
+alphas_normal:  tensor([0.7088, 1.5107, 0.4210, 1.3220, 1.5281, 0.4133, 1.3215, 1.3765, 1.7259,
+        0.4397, 1.3076, 1.5098, 1.7181, 2.0465], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2393, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4899, 0.3771, 0.7596, 0.4452, 0.7765, 0.7682, 0.6563, 0.4291, 0.7915,
+        1.0796, 0.2162, 0.4929, 0.6841, 0.8657], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6308, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 81.470    Previous Best Acc: 78.900
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  14 / 100 ]          loss: 0.122         top1: 86.248        top5: 99.436        time: 03:43
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('sep_conv_5x5', 3)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.958         top1: 81.000        top5: 98.980        time: 00:12
+alphas_normal:  tensor([0.7132, 1.5096, 0.4220, 1.3175, 1.5289, 0.4111, 1.3198, 1.3739, 1.7234,
+        0.4400, 1.3044, 1.5075, 1.7164, 2.0424], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2379, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4902, 0.3790, 0.7613, 0.4503, 0.7835, 0.7711, 0.6564, 0.4321, 0.7911,
+        1.0804, 0.2183, 0.4922, 0.6823, 0.8709], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6328, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  15 / 100 ]          loss: 0.114         top1: 87.120        top5: 99.520        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('sep_conv_5x5', 3)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 2.022         top1: 71.240        top5: 97.530        time: 00:12
+alphas_normal:  tensor([0.7176, 1.5071, 0.4253, 1.3161, 1.5278, 0.4130, 1.3163, 1.3724, 1.7236,
+        0.4410, 1.3028, 1.5034, 1.7166, 2.0386], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2373, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4888, 0.3754, 0.7570, 0.4489, 0.7820, 0.7683, 0.6562, 0.4328, 0.7954,
+        1.0809, 0.2144, 0.4927, 0.6870, 0.8736], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6324, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  16 / 100 ]          loss: 0.110         top1: 87.592        top5: 99.540        time: 03:46
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1), ('sep_conv_5x5', 3)
+, ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.175         top1: 78.890        top5: 98.490        time: 00:12
+alphas_normal:  tensor([0.7187, 1.5023, 0.4264, 1.3126, 1.5274, 0.4155, 1.3118, 1.3719, 1.7211,
+        0.4423, 1.2948, 1.5041, 1.7133, 2.0370], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2357, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4971, 0.3760, 0.7642, 0.4494, 0.7891, 0.7731, 0.6577, 0.4323, 0.8035,
+        1.0821, 0.2174, 0.4936, 0.6850, 0.8699], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6350, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  17 / 100 ]          loss: 0.106         top1: 87.956        top5: 99.592        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.900         top1: 82.230        top5: 99.030        time: 00:12
+alphas_normal:  tensor([0.7227, 1.5005, 0.4265, 1.3123, 1.5285, 0.4115, 1.3139, 1.3700, 1.7204,
+        0.4417, 1.2961, 1.5019, 1.7111, 2.0331], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2350, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5037, 0.3744, 0.7675, 0.4547, 0.7933, 0.7754, 0.6576, 0.4378, 0.8094,
+        1.0845, 0.2144, 0.4874, 0.6882, 0.8727], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6372, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 82.230    Previous Best Acc: 81.470
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  18 / 100 ]          loss: 0.101         top1: 88.396        top5: 99.632        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 3), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.019         top1: 80.410        top5: 98.930        time: 00:12
+alphas_normal:  tensor([0.7281, 1.4978, 0.4270, 1.3145, 1.5272, 0.4115, 1.3109, 1.3674, 1.7153,
+        0.4432, 1.2943, 1.4997, 1.7120, 2.0298], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2342, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5041, 0.3729, 0.7688, 0.4594, 0.7963, 0.7742, 0.6571, 0.4379, 0.8087,
+        1.0819, 0.2165, 0.4866, 0.6926, 0.8739], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6379, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  19 / 100 ]          loss: 0.098         top1: 89.044        top5: 99.664        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.145         top1: 80.150        top5: 98.650        time: 00:12
+alphas_normal:  tensor([0.7281, 1.4947, 0.4288, 1.3132, 1.5248, 0.4147, 1.3125, 1.3676, 1.7147,
+        0.4460, 1.2910, 1.4972, 1.7097, 2.0282], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2336, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5059, 0.3729, 0.7689, 0.4630, 0.7982, 0.7719, 0.6553, 0.4350, 0.8101,
+        1.0772, 0.2167, 0.4837, 0.6964, 0.8732], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6377, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  20 / 100 ]          loss: 0.095         top1: 89.408        top5: 99.632        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.976         top1: 81.270        top5: 98.920        time: 00:12
+alphas_normal:  tensor([0.7337, 1.4928, 0.4287, 1.3117, 1.5244, 0.4153, 1.3094, 1.3643, 1.7116,
+        0.4464, 1.2913, 1.4968, 1.7084, 2.0252], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2329, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5084, 0.3725, 0.7688, 0.4693, 0.7991, 0.7697, 0.6559, 0.4354, 0.8119,
+        1.0783, 0.2195, 0.4867, 0.6959, 0.8718], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6388, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  21 / 100 ]          loss: 0.091         top1: 89.816        top5: 99.644        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.159         top1: 80.010        top5: 98.700        time: 00:12
+alphas_normal:  tensor([0.7333, 1.4914, 0.4280, 1.3119, 1.5238, 0.4147, 1.3149, 1.3644, 1.7109,
+        0.4460, 1.2907, 1.4936, 1.7060, 2.0225], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2323, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5105, 0.3715, 0.7720, 0.4685, 0.7965, 0.7706, 0.6557, 0.4336, 0.8052,
+        1.0761, 0.2118, 0.4821, 0.6960, 0.8700], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6372, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  22 / 100 ]          loss: 0.090         top1: 90.164        top5: 99.708        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.014         top1: 82.140        top5: 98.750        time: 00:12
+alphas_normal:  tensor([0.7379, 1.4920, 0.4297, 1.3107, 1.5233, 0.4122, 1.3123, 1.3639, 1.7096,
+        0.4453, 1.2938, 1.4942, 1.7066, 2.0243], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2326, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5167, 0.3783, 0.7773, 0.4683, 0.8010, 0.7746, 0.6606, 0.4377, 0.8099,
+        1.0772, 0.2151, 0.4814, 0.6908, 0.8674], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6397, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  23 / 100 ]          loss: 0.084         top1: 90.732        top5: 99.752        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.048         top1: 80.840        top5: 98.630        time: 00:12
+alphas_normal:  tensor([0.7396, 1.4901, 0.4279, 1.3105, 1.5243, 0.4149, 1.3134, 1.3694, 1.7147,
+        0.4448, 1.2918, 1.4955, 1.7085, 2.0249], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2336, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5184, 0.3787, 0.7777, 0.4723, 0.8001, 0.7717, 0.6587, 0.4354, 0.8092,
+        1.0761, 0.2145, 0.4785, 0.6947, 0.8680], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6396, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  24 / 100 ]          loss: 0.083         top1: 90.924        top5: 99.772        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('max_pool_3x3', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.997         top1: 82.070        top5: 99.040        time: 00:12
+alphas_normal:  tensor([0.7417, 1.4873, 0.4279, 1.3088, 1.5219, 0.4109, 1.3112, 1.3661, 1.7096,
+        0.4471, 1.2915, 1.4950, 1.7061, 2.0223], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2319, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5206, 0.3810, 0.7773, 0.4728, 0.7931, 0.7750, 0.6543, 0.4380, 0.8122,
+        1.0746, 0.2183, 0.4753, 0.6980, 0.8665], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6398, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  25 / 100 ]          loss: 0.082         top1: 91.088        top5: 99.760        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.097         top1: 80.100        top5: 98.740        time: 00:12
+alphas_normal:  tensor([0.7424, 1.4857, 0.4298, 1.3084, 1.5218, 0.4134, 1.3090, 1.3679, 1.7117,
+        0.4474, 1.2945, 1.4942, 1.7058, 2.0228], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2325, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5223, 0.3809, 0.7758, 0.4746, 0.8019, 0.7728, 0.6569, 0.4339, 0.8125,
+        1.0715, 0.2160, 0.4721, 0.6951, 0.8631], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6392, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  26 / 100 ]          loss: 0.079         top1: 91.316        top5: 99.776        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.497         top1: 76.530        top5: 98.190        time: 00:12
+alphas_normal:  tensor([0.7481, 1.4857, 0.4287, 1.3092, 1.5211, 0.4131, 1.3075, 1.3687, 1.7109,
+        0.4487, 1.2955, 1.4938, 1.7072, 2.0208], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2328, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5248, 0.3815, 0.7765, 0.4728, 0.8022, 0.7724, 0.6535, 0.4351, 0.8101,
+        1.0731, 0.2118, 0.4742, 0.6940, 0.8647], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6390, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  27 / 100 ]          loss: 0.077         top1: 91.764        top5: 99.812        time: 03:45
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.965         top1: 81.710        top5: 99.190        time: 00:12
+alphas_normal:  tensor([0.7502, 1.4837, 0.4259, 1.3078, 1.5213, 0.4091, 1.3063, 1.3666, 1.7099,
+        0.4500, 1.2925, 1.4938, 1.7054, 2.0186], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2315, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5225, 0.3778, 0.7766, 0.4732, 0.8033, 0.7736, 0.6492, 0.4364, 0.8104,
+        1.0698, 0.2115, 0.4730, 0.6913, 0.8623], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6379, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  28 / 100 ]          loss: 0.076         top1: 91.972        top5: 99.776        time: 03:43
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.026         top1: 81.260        top5: 99.050        time: 00:12
+alphas_normal:  tensor([0.7488, 1.4787, 0.4252, 1.3039, 1.5218, 0.4108, 1.3039, 1.3626, 1.7077,
+        0.4527, 1.2949, 1.4927, 1.7051, 2.0172], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2304, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5245, 0.3817, 0.7749, 0.4713, 0.8053, 0.7708, 0.6489, 0.4342, 0.8121,
+        1.0657, 0.2088, 0.4749, 0.6931, 0.8586], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6375, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  29 / 100 ]          loss: 0.075         top1: 92.080        top5: 99.852        time: 03:44
+Genotype(normal=[('max_pool_3x3', 1), ('max_pool_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.934         top1: 81.990        top5: 99.190        time: 00:12
+alphas_normal:  tensor([0.7496, 1.4753, 0.4248, 1.3011, 1.5201, 0.4079, 1.3026, 1.3636, 1.7073,
+        0.4525, 1.2942, 1.4903, 1.7034, 2.0161], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2292, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5287, 0.3834, 0.7755, 0.4732, 0.8051, 0.7766, 0.6491, 0.4330, 0.8141,
+        1.0699, 0.2072, 0.4759, 0.6914, 0.8558], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6385, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  30 / 100 ]          loss: 0.072         top1: 92.752        top5: 99.812        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.870         top1: 82.820        top5: 99.190        time: 00:12
+alphas_normal:  tensor([0.7500, 1.4757, 0.4242, 1.3029, 1.5208, 0.4106, 1.3006, 1.3669, 1.7102,
+        0.4532, 1.2924, 1.4907, 1.7029, 2.0165], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2298, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5315, 0.3843, 0.7739, 0.4735, 0.8046, 0.7770, 0.6482, 0.4335, 0.8126,
+        1.0666, 0.2058, 0.4751, 0.6911, 0.8549], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6380, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 82.820    Previous Best Acc: 82.230
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  31 / 100 ]          loss: 0.070         top1: 92.644        top5: 99.844        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.770         top1: 85.090        top5: 99.180        time: 00:12
+alphas_normal:  tensor([0.7501, 1.4764, 0.4259, 1.3025, 1.5207, 0.4111, 1.3007, 1.3665, 1.7095,
+        0.4580, 1.2927, 1.4939, 1.7047, 2.0166], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2307, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5326, 0.3851, 0.7735, 0.4761, 0.8004, 0.7717, 0.6449, 0.4320, 0.8108,
+        1.0629, 0.2048, 0.4731, 0.6888, 0.8533], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6364, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 85.090    Previous Best Acc: 82.820
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  32 / 100 ]          loss: 0.070         top1: 92.820        top5: 99.876        time: 03:43
+Genotype(normal=[('max_pool_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.254         top1: 79.440        top5: 98.880        time: 00:12
+alphas_normal:  tensor([0.7539, 1.4729, 0.4246, 1.2994, 1.5220, 0.4101, 1.3019, 1.3652, 1.7094,
+        0.4597, 1.2938, 1.4939, 1.7037, 2.0152], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2304, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5344, 0.3826, 0.7760, 0.4780, 0.7980, 0.7681, 0.6435, 0.4327, 0.8125,
+        1.0591, 0.1994, 0.4755, 0.6936, 0.8547], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6363, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  33 / 100 ]          loss: 0.067         top1: 93.312        top5: 99.868        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.915         top1: 83.000        top5: 98.910        time: 00:12
+alphas_normal:  tensor([0.7549, 1.4691, 0.4253, 1.2962, 1.5203, 0.4086, 1.2992, 1.3635, 1.7067,
+        0.4613, 1.2939, 1.4943, 1.7024, 2.0153], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2294, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5353, 0.3846, 0.7787, 0.4818, 0.8003, 0.7685, 0.6429, 0.4287, 0.8108,
+        1.0557, 0.2018, 0.4683, 0.6892, 0.8495], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6354, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  34 / 100 ]          loss: 0.067         top1: 93.260        top5: 99.888        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.816         top1: 83.740        top5: 98.970        time: 00:12
+alphas_normal:  tensor([0.7562, 1.4667, 0.4257, 1.2955, 1.5190, 0.4110, 1.2946, 1.3601, 1.7037,
+        0.4629, 1.2931, 1.4922, 1.6998, 2.0126], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2281, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5321, 0.3865, 0.7781, 0.4822, 0.7990, 0.7718, 0.6428, 0.4302, 0.8122,
+        1.0524, 0.2032, 0.4648, 0.6900, 0.8517], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6355, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  35 / 100 ]          loss: 0.066         top1: 93.248        top5: 99.860        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.776         top1: 84.730        top5: 99.090        time: 00:12
+alphas_normal:  tensor([0.7507, 1.4655, 0.4250, 1.2944, 1.5221, 0.4107, 1.2971, 1.3633, 1.7045,
+        0.4648, 1.2950, 1.4945, 1.7018, 2.0140], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2288, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5335, 0.3850, 0.7808, 0.4832, 0.7980, 0.7714, 0.6435, 0.4264, 0.8104,
+        1.0520, 0.2008, 0.4677, 0.6846, 0.8512], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6349, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  36 / 100 ]          loss: 0.062         top1: 93.912        top5: 99.868        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.871         top1: 83.910        top5: 99.300        time: 00:12
+alphas_normal:  tensor([0.7457, 1.4671, 0.4245, 1.2968, 1.5219, 0.4119, 1.3007, 1.3638, 1.7073,
+        0.4659, 1.2974, 1.4979, 1.7045, 2.0156], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2301, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5322, 0.3801, 0.7779, 0.4800, 0.7956, 0.7694, 0.6405, 0.4270, 0.8074,
+        1.0526, 0.2004, 0.4698, 0.6865, 0.8515], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6336, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  37 / 100 ]          loss: 0.063         top1: 93.804        top5: 99.880        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 1.190         top1: 79.880        top5: 98.480        time: 00:12
+alphas_normal:  tensor([0.7470, 1.4683, 0.4247, 1.2991, 1.5208, 0.4097, 1.3009, 1.3619, 1.7027,
+        0.4689, 1.2997, 1.4965, 1.7029, 2.0132], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2297, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5326, 0.3857, 0.7853, 0.4859, 0.8006, 0.7704, 0.6422, 0.4294, 0.8134,
+        1.0504, 0.2011, 0.4665, 0.6901, 0.8483], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6358, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  38 / 100 ]          loss: 0.061         top1: 94.048        top5: 99.928        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.774         top1: 84.760        top5: 99.210        time: 00:12
+alphas_normal:  tensor([0.7520, 1.4647, 0.4261, 1.2996, 1.5204, 0.4112, 1.2999, 1.3608, 1.7032,
+        0.4698, 1.2989, 1.4961, 1.7025, 2.0140], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2299, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5332, 0.3819, 0.7817, 0.4860, 0.7890, 0.7658, 0.6440, 0.4278, 0.8109,
+        1.0440, 0.1994, 0.4613, 0.6883, 0.8432], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6326, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  39 / 100 ]          loss: 0.060         top1: 94.240        top5: 99.900        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.919         top1: 83.360        top5: 98.720        time: 00:12
+alphas_normal:  tensor([0.7549, 1.4659, 0.4250, 1.2980, 1.5199, 0.4098, 1.3003, 1.3642, 1.7023,
+        0.4685, 1.3007, 1.4955, 1.7049, 2.0154], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2304, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5361, 0.3884, 0.7864, 0.4869, 0.7982, 0.7600, 0.6429, 0.4253, 0.8094,
+        1.0405, 0.2021, 0.4579, 0.6856, 0.8387], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6327, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  40 / 100 ]          loss: 0.059         top1: 94.576        top5: 99.952        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.907         top1: 83.490        top5: 99.320        time: 00:12
+alphas_normal:  tensor([0.7521, 1.4647, 0.4227, 1.2976, 1.5218, 0.4099, 1.3030, 1.3661, 1.7034,
+        0.4689, 1.3006, 1.4948, 1.7035, 2.0152], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2303, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5368, 0.3862, 0.7866, 0.4878, 0.8012, 0.7643, 0.6433, 0.4250, 0.8079,
+        1.0428, 0.2027, 0.4599, 0.6824, 0.8439], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6336, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  41 / 100 ]          loss: 0.058         top1: 94.540        top5: 99.936        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('sep_conv_5x5', 4), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.875         top1: 83.850        top5: 99.120        time: 00:12
+alphas_normal:  tensor([0.7532, 1.4648, 0.4226, 1.2994, 1.5208, 0.4089, 1.3005, 1.3663, 1.7019,
+        0.4713, 1.3013, 1.4966, 1.7013, 2.0128], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2301, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5347, 0.3836, 0.7848, 0.4874, 0.8010, 0.7607, 0.6376, 0.4247, 0.8060,
+        1.0373, 0.2028, 0.4596, 0.6851, 0.8393], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6318, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  42 / 100 ]          loss: 0.058         top1: 94.628        top5: 99.936        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.710         top1: 86.160        top5: 99.150        time: 00:12
+alphas_normal:  tensor([0.7548, 1.4590, 0.4194, 1.2990, 1.5196, 0.4103, 1.3009, 1.3653, 1.7000,
+        0.4710, 1.3041, 1.4985, 1.6998, 2.0148], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2297, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5339, 0.3805, 0.7840, 0.4828, 0.7963, 0.7596, 0.6354, 0.4265, 0.8077,
+        1.0364, 0.2010, 0.4547, 0.6820, 0.8396], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6300, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 86.160    Previous Best Acc: 85.090
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  43 / 100 ]          loss: 0.056         top1: 94.904        top5: 99.920        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('sep_conv_5x5', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.855         top1: 84.060        top5: 99.020        time: 00:12
+alphas_normal:  tensor([0.7507, 1.4589, 0.4224, 1.2981, 1.5166, 0.4121, 1.2994, 1.3671, 1.7003,
+        0.4696, 1.3035, 1.4982, 1.7014, 2.0151], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2295, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5321, 0.3778, 0.7810, 0.4867, 0.7921, 0.7610, 0.6331, 0.4269, 0.8000,
+        1.0344, 0.2015, 0.4537, 0.6766, 0.8368], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6281, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  44 / 100 ]          loss: 0.056         top1: 95.020        top5: 99.920        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('max_pool_3x3', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.862         top1: 84.210        top5: 99.080        time: 00:12
+alphas_normal:  tensor([0.7478, 1.4572, 0.4215, 1.2973, 1.5165, 0.4116, 1.3008, 1.3669, 1.6990,
+        0.4697, 1.3084, 1.4995, 1.7028, 2.0180], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2298, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5311, 0.3812, 0.7818, 0.4860, 0.7926, 0.7560, 0.6317, 0.4268, 0.7997,
+        1.0348, 0.1980, 0.4566, 0.6772, 0.8381], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6280, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  45 / 100 ]          loss: 0.054         top1: 95.044        top5: 99.932        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 0), ('max_pool_3x3', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.787         top1: 85.500        top5: 99.440        time: 00:12
+alphas_normal:  tensor([0.7468, 1.4551, 0.4177, 1.2995, 1.5189, 0.4112, 1.3025, 1.3664, 1.6996,
+        0.4702, 1.3093, 1.4982, 1.7049, 2.0178], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2299, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5322, 0.3786, 0.7816, 0.4854, 0.7892, 0.7522, 0.6283, 0.4211, 0.7987,
+        1.0331, 0.1976, 0.4528, 0.6767, 0.8324], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6257, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  46 / 100 ]          loss: 0.053         top1: 95.308        top5: 99.960        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.795         top1: 85.130        top5: 99.420        time: 00:12
+alphas_normal:  tensor([0.7474, 1.4547, 0.4176, 1.2979, 1.5147, 0.4105, 1.3045, 1.3654, 1.6993,
+        0.4725, 1.3120, 1.4976, 1.7042, 2.0213], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2300, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5336, 0.3758, 0.7828, 0.4839, 0.7914, 0.7573, 0.6280, 0.4224, 0.7951,
+        1.0370, 0.2002, 0.4559, 0.6777, 0.8344], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6268, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  47 / 100 ]          loss: 0.051         top1: 95.632        top5: 99.928        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.751         top1: 85.560        top5: 99.310        time: 00:12
+alphas_normal:  tensor([0.7495, 1.4546, 0.4176, 1.2986, 1.5163, 0.4083, 1.3046, 1.3660, 1.6996,
+        0.4727, 1.3112, 1.4970, 1.7026, 2.0235], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2301, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5297, 0.3779, 0.7788, 0.4832, 0.7804, 0.7535, 0.6307, 0.4208, 0.7972,
+        1.0342, 0.1981, 0.4529, 0.6748, 0.8257], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6241, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  48 / 100 ]          loss: 0.051         top1: 95.852        top5: 99.956        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('max_pool_3x3', 0)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.829         top1: 84.900        top5: 99.350        time: 00:12
+alphas_normal:  tensor([0.7459, 1.4537, 0.4187, 1.2989, 1.5177, 0.4100, 1.3046, 1.3677, 1.7020,
+        0.4737, 1.3109, 1.4994, 1.7037, 2.0238], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2308, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5315, 0.3767, 0.7824, 0.4792, 0.7874, 0.7529, 0.6250, 0.4212, 0.7945,
+        1.0345, 0.1940, 0.4542, 0.6757, 0.8218], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6236, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  49 / 100 ]          loss: 0.049         top1: 95.792        top5: 99.952        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.845         top1: 84.290        top5: 99.310        time: 00:12
+alphas_normal:  tensor([0.7497, 1.4537, 0.4178, 1.2981, 1.5179, 0.4054, 1.3050, 1.3666, 1.7026,
+        0.4738, 1.3116, 1.4977, 1.7027, 2.0242], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2305, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5283, 0.3794, 0.7770, 0.4831, 0.7798, 0.7492, 0.6296, 0.4191, 0.7893,
+        1.0313, 0.1918, 0.4547, 0.6723, 0.8168], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6216, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  50 / 100 ]          loss: 0.049         top1: 96.004        top5: 99.976        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.770         top1: 85.290        top5: 99.370        time: 00:12
+alphas_normal:  tensor([0.7499, 1.4529, 0.4192, 1.2942, 1.5148, 0.4058, 1.3024, 1.3661, 1.7009,
+        0.4773, 1.3120, 1.5002, 1.7012, 2.0229], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2300, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5341, 0.3784, 0.7818, 0.4829, 0.7827, 0.7518, 0.6249, 0.4202, 0.7872,
+        1.0312, 0.1889, 0.4515, 0.6767, 0.8148], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6219, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  51 / 100 ]          loss: 0.048         top1: 96.140        top5: 99.956        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.777         top1: 85.450        top5: 99.140        time: 00:12
+alphas_normal:  tensor([0.7492, 1.4534, 0.4200, 1.2972, 1.5152, 0.4062, 1.3051, 1.3679, 1.7022,
+        0.4780, 1.3147, 1.4986, 1.7041, 2.0237], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2311, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5318, 0.3817, 0.7801, 0.4818, 0.7750, 0.7522, 0.6251, 0.4182, 0.7885,
+        1.0277, 0.1882, 0.4481, 0.6731, 0.8147], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6204, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  52 / 100 ]          loss: 0.047         top1: 96.172        top5: 99.960        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.758         top1: 85.440        top5: 99.240        time: 00:12
+alphas_normal:  tensor([0.7491, 1.4528, 0.4177, 1.2981, 1.5150, 0.4054, 1.3065, 1.3674, 1.7016,
+        0.4753, 1.3154, 1.4993, 1.7027, 2.0235], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2307, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5328, 0.3859, 0.7803, 0.4813, 0.7676, 0.7564, 0.6296, 0.4141, 0.7910,
+        1.0286, 0.1855, 0.4527, 0.6737, 0.8172], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6212, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  53 / 100 ]          loss: 0.047         top1: 96.412        top5: 99.968        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.764         top1: 85.130        top5: 99.180        time: 00:12
+alphas_normal:  tensor([0.7457, 1.4501, 0.4194, 1.2933, 1.5137, 0.4083, 1.3042, 1.3668, 1.7014,
+        0.4767, 1.3137, 1.4979, 1.7034, 2.0254], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2300, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5347, 0.3879, 0.7871, 0.4833, 0.7743, 0.7584, 0.6251, 0.4124, 0.7819,
+        1.0278, 0.1882, 0.4489, 0.6745, 0.8145], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6213, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  54 / 100 ]          loss: 0.046         top1: 96.360        top5: 99.952        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.696         top1: 86.560        top5: 99.310        time: 00:12
+alphas_normal:  tensor([0.7452, 1.4484, 0.4209, 1.2927, 1.5144, 0.4059, 1.2997, 1.3647, 1.7003,
+        0.4790, 1.3133, 1.4966, 1.7041, 2.0251], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2293, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5335, 0.3823, 0.7893, 0.4778, 0.7706, 0.7555, 0.6281, 0.4121, 0.7853,
+        1.0259, 0.1874, 0.4479, 0.6703, 0.8118], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6198, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 86.560    Previous Best Acc: 86.160
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  55 / 100 ]          loss: 0.044         top1: 96.656        top5: 99.972        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.746         top1: 85.740        top5: 99.400        time: 00:12
+alphas_normal:  tensor([0.7450, 1.4463, 0.4217, 1.2927, 1.5190, 0.4075, 1.3022, 1.3670, 1.7031,
+        0.4799, 1.3163, 1.4993, 1.7074, 2.0294], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2312, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5289, 0.3832, 0.7888, 0.4815, 0.7726, 0.7603, 0.6300, 0.4112, 0.7859,
+        1.0269, 0.1888, 0.4479, 0.6708, 0.8099], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6205, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  56 / 100 ]          loss: 0.043         top1: 96.796        top5: 99.988        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.664         top1: 87.070        top5: 99.200        time: 00:12
+alphas_normal:  tensor([0.7491, 1.4427, 0.4215, 1.2931, 1.5162, 0.4064, 1.3018, 1.3659, 1.7007,
+        0.4808, 1.3179, 1.5004, 1.7054, 2.0278], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2307, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5302, 0.3818, 0.7856, 0.4753, 0.7705, 0.7568, 0.6305, 0.4136, 0.7850,
+        1.0221, 0.1838, 0.4462, 0.6669, 0.8065], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6182, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 87.070    Previous Best Acc: 86.560
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  57 / 100 ]          loss: 0.042         top1: 96.960        top5: 99.992        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.705         top1: 86.260        top5: 99.090        time: 00:12
+alphas_normal:  tensor([0.7489, 1.4466, 0.4218, 1.2936, 1.5201, 0.4090, 1.3025, 1.3689, 1.7038,
+        0.4845, 1.3184, 1.5009, 1.7082, 2.0335], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2329, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5309, 0.3831, 0.7882, 0.4711, 0.7738, 0.7607, 0.6294, 0.4123, 0.7810,
+        1.0246, 0.1830, 0.4491, 0.6647, 0.8103], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6187, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  58 / 100 ]          loss: 0.042         top1: 97.068        top5: 99.988        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.666         top1: 86.480        top5: 99.330        time: 00:12
+alphas_normal:  tensor([0.7515, 1.4442, 0.4231, 1.2951, 1.5198, 0.4083, 1.3024, 1.3686, 1.7036,
+        0.4835, 1.3203, 1.5004, 1.7076, 2.0331], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2330, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5276, 0.3815, 0.7865, 0.4698, 0.7715, 0.7579, 0.6272, 0.4124, 0.7769,
+        1.0249, 0.1840, 0.4510, 0.6635, 0.8079], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6173, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  59 / 100 ]          loss: 0.041         top1: 96.996        top5: 99.984        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.682         top1: 86.950        top5: 99.410        time: 00:12
+alphas_normal:  tensor([0.7487, 1.4427, 0.4219, 1.2922, 1.5179, 0.4124, 1.2994, 1.3673, 1.7021,
+        0.4846, 1.3173, 1.5002, 1.7060, 2.0320], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2318, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5282, 0.3847, 0.7855, 0.4716, 0.7645, 0.7551, 0.6229, 0.4132, 0.7732,
+        1.0209, 0.1849, 0.4493, 0.6642, 0.8101], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6163, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  60 / 100 ]          loss: 0.039         top1: 97.276        top5: 99.984        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.659         top1: 86.750        top5: 99.440        time: 00:12
+alphas_normal:  tensor([0.7485, 1.4414, 0.4237, 1.2933, 1.5150, 0.4112, 1.3005, 1.3652, 1.7013,
+        0.4867, 1.3174, 1.4990, 1.7039, 2.0311], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2313, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5263, 0.3860, 0.7847, 0.4740, 0.7554, 0.7492, 0.6280, 0.4063, 0.7733,
+        1.0225, 0.1868, 0.4428, 0.6560, 0.8063], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6141, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  61 / 100 ]          loss: 0.039         top1: 97.312        top5: 99.984        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 1)
+, ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.739         top1: 85.820        top5: 99.390        time: 00:12
+alphas_normal:  tensor([0.7491, 1.4435, 0.4240, 1.2929, 1.5150, 0.4096, 1.2985, 1.3658, 1.7021,
+        0.4859, 1.3217, 1.4990, 1.7080, 2.0357], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2322, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5254, 0.3878, 0.7885, 0.4698, 0.7608, 0.7530, 0.6259, 0.4060, 0.7781,
+        1.0200, 0.1834, 0.4443, 0.6579, 0.8065], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6148, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  62 / 100 ]          loss: 0.040         top1: 97.280        top5: 99.980        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.841         top1: 84.000        top5: 99.030        time: 00:12
+alphas_normal:  tensor([0.7507, 1.4391, 0.4240, 1.2909, 1.5129, 0.4115, 1.2966, 1.3681, 1.7026,
+        0.4871, 1.3187, 1.4985, 1.7082, 2.0368], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2318, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5219, 0.3807, 0.7877, 0.4712, 0.7592, 0.7518, 0.6265, 0.4032, 0.7763,
+        1.0200, 0.1793, 0.4384, 0.6571, 0.8009], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6124, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  63 / 100 ]          loss: 0.038         top1: 97.592        top5: 99.972        time: 03:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.635         top1: 87.720        top5: 99.410        time: 00:12
+alphas_normal:  tensor([0.7519, 1.4426, 0.4240, 1.2922, 1.5149, 0.4105, 1.2981, 1.3703, 1.7049,
+        0.4856, 1.3193, 1.5022, 1.7096, 2.0400], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2333, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5256, 0.3828, 0.7905, 0.4630, 0.7567, 0.7505, 0.6229, 0.4057, 0.7700,
+        1.0210, 0.1796, 0.4408, 0.6606, 0.8047], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6125, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 87.720    Previous Best Acc: 87.070
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  64 / 100 ]          loss: 0.037         top1: 97.744        top5: 99.988        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.673         top1: 87.300        top5: 99.440        time: 00:12
+alphas_normal:  tensor([0.7533, 1.4422, 0.4261, 1.2941, 1.5164, 0.4105, 1.2996, 1.3709, 1.7073,
+        0.4861, 1.3185, 1.5000, 1.7094, 2.0396], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2339, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5190, 0.3844, 0.7911, 0.4647, 0.7552, 0.7484, 0.6227, 0.4046, 0.7670,
+        1.0225, 0.1834, 0.4380, 0.6561, 0.8015], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6113, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  65 / 100 ]          loss: 0.036         top1: 97.880        top5: 99.996        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.635         top1: 87.410        top5: 99.290        time: 00:12
+alphas_normal:  tensor([0.7512, 1.4415, 0.4246, 1.2933, 1.5144, 0.4116, 1.2996, 1.3694, 1.7052,
+        0.4882, 1.3190, 1.4998, 1.7079, 2.0402], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2333, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5194, 0.3847, 0.7934, 0.4616, 0.7600, 0.7490, 0.6160, 0.4043, 0.7685,
+        1.0202, 0.1837, 0.4396, 0.6561, 0.8003], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6112, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  66 / 100 ]          loss: 0.035         top1: 97.900        top5: 99.984        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.659         top1: 87.240        top5: 99.240        time: 00:12
+alphas_normal:  tensor([0.7555, 1.4428, 0.4245, 1.2959, 1.5150, 0.4097, 1.3012, 1.3697, 1.7068,
+        0.4871, 1.3217, 1.5021, 1.7102, 2.0460], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2349, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5193, 0.3842, 0.7884, 0.4662, 0.7564, 0.7420, 0.6159, 0.4027, 0.7650,
+        1.0195, 0.1837, 0.4378, 0.6541, 0.7952], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6093, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  67 / 100 ]          loss: 0.035         top1: 97.960        top5: 99.980        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.673         top1: 86.720        top5: 99.380        time: 00:12
+alphas_normal:  tensor([0.7531, 1.4406, 0.4239, 1.2958, 1.5153, 0.4086, 1.2970, 1.3691, 1.7068,
+        0.4896, 1.3206, 1.5040, 1.7131, 2.0473], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2346, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5146, 0.3789, 0.7883, 0.4660, 0.7495, 0.7368, 0.6189, 0.3985, 0.7604,
+        1.0171, 0.1881, 0.4386, 0.6525, 0.7932], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6073, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  68 / 100 ]          loss: 0.035         top1: 97.928        top5: 99.988        time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.741         top1: 86.150        top5: 99.040        time: 00:12
+alphas_normal:  tensor([0.7564, 1.4399, 0.4244, 1.2889, 1.5115, 0.4075, 1.2962, 1.3687, 1.7066,
+        0.4912, 1.3155, 1.4996, 1.7102, 2.0459], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2330, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5189, 0.3800, 0.7869, 0.4607, 0.7482, 0.7345, 0.6189, 0.3987, 0.7551,
+        1.0209, 0.1864, 0.4384, 0.6460, 0.7945], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6063, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  69 / 100 ]          loss: 0.034         top1: 98.084        top5: 99.988        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.632         top1: 87.510        top5: 99.470        time: 00:12
+alphas_normal:  tensor([0.7562, 1.4406, 0.4278, 1.2887, 1.5139, 0.4075, 1.2959, 1.3694, 1.7075,
+        0.4914, 1.3170, 1.5013, 1.7122, 2.0473], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2341, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5155, 0.3806, 0.7844, 0.4598, 0.7442, 0.7339, 0.6181, 0.3977, 0.7500,
+        1.0176, 0.1852, 0.4344, 0.6445, 0.7940], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6043, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  70 / 100 ]          loss: 0.033         top1: 98.196        top5: 100.000       time: 03:44
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.677         top1: 86.970        top5: 99.160        time: 00:12
+alphas_normal:  tensor([0.7570, 1.4424, 0.4289, 1.2890, 1.5143, 0.4050, 1.2944, 1.3680, 1.7061,
+        0.4905, 1.3165, 1.4990, 1.7128, 2.0475], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2337, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5164, 0.3789, 0.7878, 0.4597, 0.7440, 0.7323, 0.6201, 0.3915, 0.7565,
+        1.0174, 0.1897, 0.4375, 0.6470, 0.7973], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6054, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  71 / 100 ]          loss: 0.032         top1: 98.292        top5: 99.992        time: 03:43
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.606         top1: 88.060        top5: 99.480        time: 00:12
+alphas_normal:  tensor([0.7517, 1.4435, 0.4304, 1.2901, 1.5172, 0.4098, 1.2971, 1.3742, 1.7130,
+        0.4931, 1.3251, 1.5040, 1.7188, 2.0545], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2373, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5192, 0.3841, 0.7918, 0.4625, 0.7464, 0.7346, 0.6213, 0.3911, 0.7564,
+        1.0188, 0.1871, 0.4348, 0.6475, 0.7999], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6068, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 88.060    Previous Best Acc: 87.720
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  72 / 100 ]          loss: 0.032         top1: 98.252        top5: 99.988        time: 03:48
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.598         top1: 88.040        top5: 99.400        time: 00:14
+alphas_normal:  tensor([0.7548, 1.4440, 0.4294, 1.2891, 1.5174, 0.4087, 1.2922, 1.3730, 1.7134,
+        0.4912, 1.3242, 1.5051, 1.7195, 2.0558], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2370, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5130, 0.3824, 0.7860, 0.4615, 0.7382, 0.7329, 0.6214, 0.3900, 0.7514,
+        1.0164, 0.1891, 0.4365, 0.6455, 0.7953], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6042, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  73 / 100 ]          loss: 0.031         top1: 98.404        top5: 99.992        time: 03:58
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.627         top1: 87.720        top5: 99.390        time: 00:14
+alphas_normal:  tensor([0.7565, 1.4427, 0.4281, 1.2892, 1.5156, 0.4069, 1.2896, 1.3718, 1.7104,
+        0.4894, 1.3241, 1.5002, 1.7169, 2.0527], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2353, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5147, 0.3852, 0.7893, 0.4593, 0.7410, 0.7369, 0.6193, 0.3918, 0.7529,
+        1.0151, 0.1891, 0.4336, 0.6436, 0.7944], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6047, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  74 / 100 ]          loss: 0.031         top1: 98.388        top5: 99.988        time: 04:01
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.611         top1: 87.920        top5: 99.510        time: 00:15
+alphas_normal:  tensor([0.7563, 1.4450, 0.4282, 1.2913, 1.5210, 0.4073, 1.2932, 1.3748, 1.7145,
+        0.4905, 1.3260, 1.5072, 1.7203, 2.0583], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2381, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5138, 0.3842, 0.7912, 0.4581, 0.7460, 0.7336, 0.6183, 0.3963, 0.7483,
+        1.0117, 0.1860, 0.4341, 0.6472, 0.7926], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6044, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  75 / 100 ]          loss: 0.030         top1: 98.528        top5: 99.996        time: 04:47
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.650         top1: 87.200        top5: 99.410        time: 00:17
+alphas_normal:  tensor([0.7536, 1.4451, 0.4272, 1.2901, 1.5205, 0.4086, 1.2922, 1.3737, 1.7132,
+        0.4924, 1.3238, 1.5069, 1.7200, 2.0584], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2376, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5145, 0.3802, 0.7932, 0.4610, 0.7385, 0.7413, 0.6174, 0.3984, 0.7492,
+        1.0145, 0.1856, 0.4339, 0.6463, 0.7909], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6046, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  76 / 100 ]          loss: 0.030         top1: 98.592        top5: 99.996        time: 05:01
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('sep_conv_5x5', 1)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.618         top1: 87.630        top5: 99.490        time: 00:19
+alphas_normal:  tensor([0.7578, 1.4489, 0.4272, 1.2940, 1.5239, 0.4070, 1.2951, 1.3757, 1.7203,
+        0.4923, 1.3262, 1.5088, 1.7237, 2.0628], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2403, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5139, 0.3846, 0.7911, 0.4590, 0.7403, 0.7431, 0.6234, 0.3902, 0.7512,
+        1.0132, 0.1862, 0.4339, 0.6481, 0.7892], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6048, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  77 / 100 ]          loss: 0.029         top1: 98.616        top5: 99.992        time: 04:48
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_3x3', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.600         top1: 87.990        top5: 99.410        time: 00:19
+alphas_normal:  tensor([0.7548, 1.4446, 0.4266, 1.2888, 1.5216, 0.4037, 1.2940, 1.3735, 1.7143,
+        0.4923, 1.3229, 1.5049, 1.7195, 2.0594], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2372, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5110, 0.3840, 0.7917, 0.4593, 0.7371, 0.7417, 0.6216, 0.3904, 0.7481,
+        1.0164, 0.1888, 0.4312, 0.6467, 0.7882], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6040, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  78 / 100 ]          loss: 0.028         top1: 98.640        top5: 99.992        time: 04:41
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.590         top1: 88.090        top5: 99.400        time: 00:15
+alphas_normal:  tensor([0.7528, 1.4433, 0.4280, 1.2864, 1.5212, 0.4037, 1.2950, 1.3739, 1.7163,
+        0.4943, 1.3204, 1.5039, 1.7215, 2.0644], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2375, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5099, 0.3857, 0.7901, 0.4599, 0.7346, 0.7387, 0.6180, 0.3868, 0.7461,
+        1.0115, 0.1832, 0.4326, 0.6418, 0.7875], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6019, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 88.090    Previous Best Acc: 88.060
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  79 / 100 ]          loss: 0.028         top1: 98.804        top5: 100.000       time: 04:22
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.567         top1: 88.330        top5: 99.510        time: 00:17
+alphas_normal:  tensor([0.7542, 1.4460, 0.4275, 1.2880, 1.5221, 0.4070, 1.2947, 1.3742, 1.7190,
+        0.4959, 1.3222, 1.5041, 1.7230, 2.0665], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2389, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5093, 0.3877, 0.7897, 0.4608, 0.7328, 0.7419, 0.6204, 0.3869, 0.7424,
+        1.0130, 0.1878, 0.4285, 0.6386, 0.7832], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6016, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 88.330    Previous Best Acc: 88.090
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  80 / 100 ]          loss: 0.028         top1: 98.784        top5: 99.996        time: 04:34
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 0), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.615         top1: 87.730        top5: 99.480        time: 00:15
+alphas_normal:  tensor([0.7587, 1.4476, 0.4272, 1.2879, 1.5239, 0.4042, 1.2956, 1.3766, 1.7207,
+        0.4943, 1.3252, 1.5056, 1.7251, 2.0682], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2400, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5057, 0.3889, 0.7836, 0.4614, 0.7330, 0.7405, 0.6172, 0.3884, 0.7403,
+        1.0101, 0.1816, 0.4296, 0.6381, 0.7818], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6000, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  81 / 100 ]          loss: 0.028         top1: 98.704        top5: 99.992        time: 04:37
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 1), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.580         top1: 88.230        top5: 99.470        time: 00:47
+alphas_normal:  tensor([0.7546, 1.4456, 0.4297, 1.2856, 1.5234, 0.4057, 1.2914, 1.3748, 1.7206,
+        0.4950, 1.3189, 1.5057, 1.7251, 2.0686], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2389, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5091, 0.3880, 0.7880, 0.4638, 0.7283, 0.7442, 0.6220, 0.3886, 0.7434,
+        1.0101, 0.1818, 0.4283, 0.6362, 0.7830], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6011, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  82 / 100 ]          loss: 0.027         top1: 98.968        top5: 99.992        time: 04:39
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 0), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.583         top1: 88.220        top5: 99.480        time: 00:16
+alphas_normal:  tensor([0.7539, 1.4468, 0.4289, 1.2869, 1.5257, 0.4087, 1.2918, 1.3762, 1.7211,
+        0.4970, 1.3192, 1.5077, 1.7257, 2.0718], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2401, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5114, 0.3815, 0.7903, 0.4618, 0.7284, 0.7433, 0.6244, 0.3882, 0.7416,
+        1.0116, 0.1785, 0.4288, 0.6377, 0.7813], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6006, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  83 / 100 ]          loss: 0.027         top1: 98.892        top5: 99.992        time: 04:32
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 0), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.592         top1: 87.870        top5: 99.490        time: 00:17
+alphas_normal:  tensor([0.7567, 1.4496, 0.4281, 1.2870, 1.5260, 0.4084, 1.2903, 1.3765, 1.7206,
+        0.4961, 1.3221, 1.5069, 1.7239, 2.0713], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2402, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5073, 0.3795, 0.7891, 0.4597, 0.7309, 0.7464, 0.6221, 0.3902, 0.7442,
+        1.0130, 0.1780, 0.4284, 0.6355, 0.7756], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6000, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  84 / 100 ]          loss: 0.026         top1: 98.944        top5: 99.996        time: 04:32
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 0), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.567         top1: 88.180        top5: 99.400        time: 00:17
+alphas_normal:  tensor([0.7592, 1.4496, 0.4271, 1.2870, 1.5242, 0.4084, 1.2901, 1.3782, 1.7231,
+        0.4973, 1.3225, 1.5056, 1.7252, 2.0753], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2409, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5021, 0.3801, 0.7943, 0.4575, 0.7295, 0.7464, 0.6227, 0.3920, 0.7490,
+        1.0203, 0.1821, 0.4301, 0.6371, 0.7731], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6012, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  85 / 100 ]          loss: 0.026         top1: 98.904        top5: 100.000       time: 04:34
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.577         top1: 88.230        top5: 99.460        time: 00:17
+alphas_normal:  tensor([0.7597, 1.4479, 0.4278, 1.2867, 1.5256, 0.4104, 1.2847, 1.3767, 1.7212,
+        0.4976, 1.3180, 1.5058, 1.7261, 2.0747], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2402, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4986, 0.3777, 0.7881, 0.4581, 0.7315, 0.7394, 0.6247, 0.3952, 0.7449,
+        1.0136, 0.1791, 0.4289, 0.6349, 0.7710], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5990, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  86 / 100 ]          loss: 0.025         top1: 98.964        top5: 99.996        time: 04:32
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 0), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.569         top1: 88.350        top5: 99.450        time: 00:16
+alphas_normal:  tensor([0.7615, 1.4484, 0.4293, 1.2879, 1.5257, 0.4062, 1.2883, 1.3778, 1.7232,
+        0.4950, 1.3198, 1.5047, 1.7253, 2.0757], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2406, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4994, 0.3791, 0.7903, 0.4571, 0.7293, 0.7409, 0.6212, 0.3913, 0.7442,
+        1.0136, 0.1832, 0.4267, 0.6296, 0.7747], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5986, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 88.350    Previous Best Acc: 88.330
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  87 / 100 ]          loss: 0.025         top1: 99.012        top5: 99.996        time: 04:31
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.574         top1: 88.480        top5: 99.460        time: 00:17
+alphas_normal:  tensor([0.7605, 1.4497, 0.4308, 1.2918, 1.5288, 0.4087, 1.2906, 1.3818, 1.7273,
+        0.4964, 1.3199, 1.5081, 1.7290, 2.0800], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2431, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5003, 0.3805, 0.7919, 0.4559, 0.7259, 0.7411, 0.6176, 0.3943, 0.7452,
+        1.0156, 0.1820, 0.4280, 0.6280, 0.7815], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5991, device='cuda:0', grad_fn=<MeanBackward0>)
+best result update!
+Current Acc: 88.480    Previous Best Acc: 88.350
+Model tea_darts_supernet saved at: data/model/image/cifar10/tea_darts_supernet.pth
+--------------------------------------------------
+Epoch: [  88 / 100 ]          loss: 0.025         top1: 99.052        top5: 100.000       time: 04:36
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 0), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.586         top1: 88.150        top5: 99.390        time: 00:18
+alphas_normal:  tensor([0.7576, 1.4487, 0.4309, 1.2864, 1.5276, 0.4116, 1.2909, 1.3800, 1.7246,
+        0.4959, 1.3204, 1.5069, 1.7280, 2.0803], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2421, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5007, 0.3775, 0.7891, 0.4558, 0.7348, 0.7461, 0.6192, 0.3960, 0.7448,
+        1.0209, 0.1853, 0.4292, 0.6346, 0.7819], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.6011, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  89 / 100 ]          loss: 0.025         top1: 99.024        top5: 99.996        time: 04:45
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.587         top1: 88.010        top5: 99.500        time: 00:17
+alphas_normal:  tensor([0.7578, 1.4510, 0.4294, 1.2894, 1.5262, 0.4094, 1.2900, 1.3797, 1.7222,
+        0.4927, 1.3201, 1.5065, 1.7255, 2.0812], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2415, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4981, 0.3767, 0.7842, 0.4588, 0.7276, 0.7425, 0.6202, 0.3940, 0.7341,
+        1.0161, 0.1839, 0.4254, 0.6365, 0.7822], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5986, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  90 / 100 ]          loss: 0.025         top1: 99.112        top5: 100.000       time: 04:37
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.575         top1: 88.040        top5: 99.470        time: 00:16
+alphas_normal:  tensor([0.7604, 1.4507, 0.4291, 1.2914, 1.5276, 0.4085, 1.2900, 1.3794, 1.7244,
+        0.4955, 1.3178, 1.5066, 1.7272, 2.0826], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2422, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4990, 0.3758, 0.7852, 0.4578, 0.7292, 0.7418, 0.6241, 0.3933, 0.7387,
+        1.0193, 0.1842, 0.4261, 0.6336, 0.7762], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5989, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  91 / 100 ]          loss: 0.025         top1: 99.160        top5: 99.996        time: 04:35
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.571         top1: 88.390        top5: 99.420        time: 00:17
+alphas_normal:  tensor([0.7624, 1.4483, 0.4314, 1.2885, 1.5285, 0.4117, 1.2882, 1.3797, 1.7266,
+        0.4961, 1.3138, 1.5029, 1.7271, 2.0818], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2419, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5009, 0.3736, 0.7855, 0.4572, 0.7240, 0.7433, 0.6126, 0.3943, 0.7372,
+        1.0208, 0.1834, 0.4270, 0.6344, 0.7742], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5977, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  92 / 100 ]          loss: 0.024         top1: 99.084        top5: 99.996        time: 04:32
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 2)
+, ('sep_conv_5x5', 3), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.569         top1: 88.350        top5: 99.460        time: 00:17
+alphas_normal:  tensor([0.7587, 1.4492, 0.4297, 1.2920, 1.5295, 0.4115, 1.2887, 1.3845, 1.7283,
+        0.4960, 1.3151, 1.5093, 1.7306, 2.0881], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2437, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5009, 0.3757, 0.7851, 0.4588, 0.7238, 0.7418, 0.6217, 0.3911, 0.7440,
+        1.0194, 0.1839, 0.4224, 0.6341, 0.7726], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5982, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  93 / 100 ]          loss: 0.025         top1: 99.160        top5: 99.996        time: 04:36
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.568         top1: 88.410        top5: 99.440        time: 00:16
+alphas_normal:  tensor([0.7557, 1.4519, 0.4323, 1.2929, 1.5326, 0.4113, 1.2890, 1.3838, 1.7314,
+        0.4980, 1.3152, 1.5103, 1.7330, 2.0885], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2447, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4986, 0.3721, 0.7810, 0.4593, 0.7217, 0.7371, 0.6242, 0.3908, 0.7405,
+        1.0156, 0.1812, 0.4267, 0.6327, 0.7731], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5968, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  94 / 100 ]          loss: 0.024         top1: 99.160        top5: 100.000       time: 04:40
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_3x3', 3)], reduce_concat=range(2, 6))
+Validate                      loss: 0.573         top1: 88.290        top5: 99.490        time: 00:22
+alphas_normal:  tensor([0.7595, 1.4528, 0.4316, 1.2926, 1.5307, 0.4084, 1.2898, 1.3809, 1.7272,
+        0.4961, 1.3189, 1.5063, 1.7327, 2.0874], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2439, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4963, 0.3720, 0.7818, 0.4579, 0.7256, 0.7368, 0.6173, 0.3893, 0.7329,
+        1.0149, 0.1816, 0.4232, 0.6284, 0.7739], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5951, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  95 / 100 ]          loss: 0.024         top1: 99.168        top5: 100.000       time: 05:24
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 2)
+, ('sep_conv_5x5', 3), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.567         top1: 88.220        top5: 99.450        time: 00:23
+alphas_normal:  tensor([0.7646, 1.4506, 0.4288, 1.2924, 1.5321, 0.4064, 1.2887, 1.3825, 1.7253,
+        0.4964, 1.3195, 1.5086, 1.7295, 2.0891], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2439, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4997, 0.3758, 0.7869, 0.4572, 0.7231, 0.7418, 0.6179, 0.3872, 0.7373,
+        1.0199, 0.1804, 0.4251, 0.6292, 0.7747], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5969, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  96 / 100 ]          loss: 0.024         top1: 99.184        top5: 100.000       time: 05:26
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 2)
+, ('sep_conv_5x5', 3), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.567         top1: 88.380        top5: 99.440        time: 00:23
+alphas_normal:  tensor([0.7601, 1.4469, 0.4319, 1.2882, 1.5333, 0.4049, 1.2885, 1.3800, 1.7224,
+        0.4946, 1.3180, 1.5065, 1.7289, 2.0864], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2422, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5039, 0.3806, 0.7833, 0.4573, 0.7189, 0.7371, 0.6233, 0.3878, 0.7313,
+        1.0193, 0.1795, 0.4250, 0.6290, 0.7693], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5961, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  97 / 100 ]          loss: 0.023         top1: 99.212        top5: 100.000       time: 04:48
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.558         top1: 88.350        top5: 99.460        time: 00:16
+alphas_normal:  tensor([0.7589, 1.4475, 0.4324, 1.2878, 1.5334, 0.4068, 1.2874, 1.3803, 1.7261,
+        0.4972, 1.3175, 1.5097, 1.7308, 2.0912], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2434, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5051, 0.3785, 0.7846, 0.4545, 0.7178, 0.7439, 0.6213, 0.3874, 0.7294,
+        1.0254, 0.1782, 0.4276, 0.6342, 0.7759], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5974, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  98 / 100 ]          loss: 0.024         top1: 99.112        top5: 99.996        time: 04:24
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 1), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.562         top1: 88.310        top5: 99.460        time: 00:15
+alphas_normal:  tensor([0.7606, 1.4495, 0.4320, 1.2879, 1.5342, 0.4070, 1.2888, 1.3803, 1.7279,
+        0.4957, 1.3187, 1.5101, 1.7318, 2.0911], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2440, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.5006, 0.3795, 0.7822, 0.4568, 0.7105, 0.7366, 0.6205, 0.3838, 0.7304,
+        1.0224, 0.1770, 0.4229, 0.6272, 0.7802], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5950, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [  99 / 100 ]          loss: 0.024         top1: 99.160        top5: 100.000       time: 04:27
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_5x5', 0), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_3x3', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.564         top1: 88.300        top5: 99.420        time: 00:16
+alphas_normal:  tensor([0.7654, 1.4507, 0.4320, 1.2850, 1.5346, 0.4041, 1.2887, 1.3807, 1.7279,
+        0.4980, 1.3176, 1.5094, 1.7298, 2.0902], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2439, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4999, 0.3814, 0.7856, 0.4544, 0.7200, 0.7420, 0.6229, 0.3855, 0.7346,
+        1.0190, 0.1776, 0.4244, 0.6325, 0.7777], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5970, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+Epoch: [ 100 / 100 ]          loss: 0.023         top1: 99.076        top5: 100.000       time: 04:25
+Genotype(normal=[('sep_conv_3x3', 1), ('sep_conv_5x5', 0), ('sep_conv_5x5', 2), ('sep_conv_3x3', 1), ('sep_conv_5x5', 3)
+, ('sep_conv_5x5', 2), ('max_pool_3x3', 4), ('max_pool_3x3', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_5x5', 0)
+, ('sep_conv_5x5', 1), ('sep_conv_5x5', 2), ('sep_conv_5x5', 1), ('sep_conv_5x5', 3), ('sep_conv_5x5', 2), ('sep_conv_5x
+5', 4), ('sep_conv_5x5', 2)], reduce_concat=range(2, 6))
+Validate                      loss: 0.568         top1: 88.220        top5: 99.530        time: 00:16
+alphas_normal:  tensor([0.7653, 1.4494, 0.4320, 1.2883, 1.5353, 0.4049, 1.2897, 1.3793, 1.7296,
+        0.4998, 1.3177, 1.5092, 1.7308, 2.0919], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(1.2445, device='cuda:0', grad_fn=<MeanBackward0>)
+alphas_reduce:  tensor([0.4996, 0.3783, 0.7854, 0.4535, 0.7164, 0.7432, 0.6245, 0.3900, 0.7304,
+        1.0222, 0.1773, 0.4258, 0.6282, 0.7801], device='cuda:0',
+       grad_fn=<DiagBackward0>) tensor(0.5968, device='cuda:0', grad_fn=<MeanBackward0>)
+--------------------------------------------------
+(trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$
