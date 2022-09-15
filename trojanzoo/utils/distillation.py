@@ -42,7 +42,9 @@ def distillation(module: nn.Module, num_classes: int,
           accuracy_fn: Callable[..., list[float]] = None,
           verbose: bool = True, output_freq: str = 'iter', indent: int = 0,
           change_train_eval: bool = True, lr_scheduler_freq: str = 'epoch',
-          backward_and_step: bool = True, tea_forward_fn: Callable[..., torch.Tensor] = None,
+          backward_and_step: bool = True, 
+          tea_arch_parameters = None,
+          tea_forward_fn: Callable[..., torch.Tensor] = None,
           **kwargs):
     r"""Train the model"""
     if epochs <= 0:
@@ -65,7 +67,7 @@ def distillation(module: nn.Module, num_classes: int,
         best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
                                            forward_fn=forward_fn, loss_fn=loss_fn,
                                            writer=None, tag=tag, _epoch=start_epoch,
-                                           verbose=verbose, indent=indent, **kwargs)
+                                           verbose=verbose, indent=indent, tea_arch_parameters= tea_arch_parameters, **kwargs)
         best_acc = best_validate_result[0]
 
     params: list[nn.Parameter] = []
@@ -244,6 +246,7 @@ def dis_validate(module: nn.Module, num_classes: int,
              tag: str = '', _epoch: int = None,
              accuracy_fn: Callable[..., list[float]] = None,
               tea_arch_parameters=None,
+              stu_arch_parameters=None,
              **kwargs) -> tuple[float, float]:
     r"""Evaluate the model.
 
@@ -273,8 +276,12 @@ def dis_validate(module: nn.Module, num_classes: int,
                 _output, _label, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
             logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5)
-    L2_norm = torch.cdist(tea_arch_parameters, module.arch_parameters(),2)
-    print("alphas_normal: ", L2_norm[0,0], "alphas_reduce: ", L2_norm[1,1])
+    normal_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
+    reduce_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[1], stu_arch_parameters[1],2))
+
+    print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
+    print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
+
     acc, loss = (logger.meters['top1'].global_avg,
                  logger.meters['loss'].global_avg)
     if writer is not None and _epoch is not None and main_tag:

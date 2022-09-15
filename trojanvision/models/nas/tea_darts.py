@@ -329,7 +329,7 @@ class TEA_DARTS(ImageModel):
                accuracy_fn: Callable[..., list[float]] = None,
                verbose: bool = True, indent: int = 0, tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         get_data_fn = get_data_fn or self.get_data
-        validate_fn = validate_fn or self._validate
+        validate_fn = validate_fn or self._dis_validate
         if self.arch_search:
             if not self.use_full_train_set:
                 loader_train = loader_train or self.train2
@@ -375,7 +375,7 @@ class TEA_DARTS(ImageModel):
                 #     super()._validate(loader=self.train3,
                 #                       adv_train=adv_train,
                 #                       print_prefix='TrainVal', **kwargs)
-                return validate_old(loader=loader, adv_train=adv_train, **kwargs)
+                return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
 
             get_data_fn = get_data
             validate_fn = _validate
