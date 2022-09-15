@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
 
 r"""
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --verbose 1 --color --epochs 200 --batch_size 96 --cutout --grad_clip 5.0 --lr 0.025 --lr_scheduler
-
-# adv train pgd
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --verbose 1 --color --adv_train --adv_train_random_init --validate_interval 1 --epochs 15 --lr 0.1 --lr_scheduler
-
-# adv train fgsm
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --verbose 1 --color --adv_train --adv_train_random_init --adv_train_iter 1 --adv_train_alpha 0.0392156862745 --adv_train_eval_iter 7 --adv_train_eval_alpha 0.0078431372549 --validate_interval 1 --epochs 15 --lr 0.1 --lr_scheduler
-
-# adv train fgsm mnist
-CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --verbose 1 --color --dataset mnist --adv_train --adv_train_random_init --adv_train_iter 1 --adv_train_alpha 0.375 --adv_train_eps 0.3 --adv_train_eval_iter 7 --adv_train_eval_alpha 0.1 --adv_train_eval_eps 0.3 --validate_interval 1 --epochs 15 --lr 0.1 --lr_scheduler
+CUDA_VISIBLE_DEVICES=3 python examples/distillation.py --color --validate_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --batch_size 100 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save --download
 """  # noqa: E501
 
 import trojanvision
