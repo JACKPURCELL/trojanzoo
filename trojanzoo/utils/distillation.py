@@ -243,6 +243,7 @@ def validate(module: nn.Module, num_classes: int,
              writer=None, main_tag: str = 'valid',
              tag: str = '', _epoch: int = None,
              accuracy_fn: Callable[..., list[float]] = None,
+              tea_arch_parameters=None,
              **kwargs) -> tuple[float, float]:
     r"""Evaluate the model.
 
@@ -272,6 +273,8 @@ def validate(module: nn.Module, num_classes: int,
                 _output, _label, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
             logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5)
+    L2_norm = torch.cdist(tea_arch_parameters, module.arch_parameters(),2)
+    print("alphas_normal: ", L2_norm[0,0], "alphas_reduce: ", L2_norm[1,1])
     acc, loss = (logger.meters['top1'].global_avg,
                  logger.meters['loss'].global_avg)
     if writer is not None and _epoch is not None and main_tag:

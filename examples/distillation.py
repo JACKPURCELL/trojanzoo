@@ -37,7 +37,7 @@ if __name__ == '__main__':
     filename = "./data/model/image/cifar10/darts_supernet.pth"
     
     tea_model.load(filename)
-
+    tea_arch_parameters = tea_model.arch_parameters()
 
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
     acc, loss = tea_model._validate()
-    model._distillation(tea_forward_fn=tea_model.__call__,**trainer)
+    model._distillation(tea_forward_fn=tea_model.__call__,tea_arch_parameters=tea_arch_parameters,**trainer)
 
     # kwargs['model_name'] = 'tea_darts'
 

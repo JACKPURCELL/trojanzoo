@@ -1080,6 +1080,7 @@ class Model(BasicObject):
                   writer=None, main_tag: str = 'valid',
                   tag: str = '', _epoch: int = None,
                   accuracy_fn: Callable[..., list[float]] = None,
+                  tea_arch_parameters=None,
                   **kwargs) -> tuple[float, float]:
         r"""Evaluate the model.
 
@@ -1099,7 +1100,8 @@ class Model(BasicObject):
                         get_data_fn=get_data_fn,
                         loss_fn=loss_fn,
                         writer=writer, main_tag=main_tag, tag=tag,
-                        _epoch=_epoch, accuracy_fn=accuracy_fn, **kwargs)
+                        _epoch=_epoch, accuracy_fn=accuracy_fn,  
+                        tea_arch_parameters=tea_arch_parameters, **kwargs)
 
     def _compare(self, peer: nn.Module = None,
                  loader: torch.utils.data.DataLoader = None,
