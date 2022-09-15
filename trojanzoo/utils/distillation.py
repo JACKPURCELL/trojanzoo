@@ -214,6 +214,7 @@ def distillation(module: nn.Module, num_classes: int,
                                           writer=writer, tag=tag,
                                           _epoch=_epoch + start_epoch,
                                           verbose=verbose, indent=indent,
+                                          tea_arch_parameters=tea_arch_parameters,
                                           **kwargs)
             cur_acc = validate_result[0]
             if cur_acc >= best_acc:
