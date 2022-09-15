@@ -36,7 +36,7 @@ if __name__ == '__main__':
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
     acc, loss = tea_model._validate()
-    model._distillation(tea_forward_fn=tea_model.__call__,tea_arch_parameters=tea_arch_parameters,**trainer)
+    model._distillation(tea_forward_fn=tea_model.__call__,**trainer)
 
     # kwargs['model_name'] = 'tea_darts'
 

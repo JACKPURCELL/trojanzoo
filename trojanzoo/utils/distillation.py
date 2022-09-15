@@ -52,7 +52,7 @@ def distillation(module: nn.Module, num_classes: int,
     loss_fn = loss_fn or (lambda _input, _label, _output=None: F.cross_entropy(_output or forward_fn(_input), _label))
     soft_loss_fn = nn.KLDivLoss(reduction="batchmean")
     
-    validate_fn = validate_fn or validate 
+    validate_fn = validate_fn or dis_validate 
     accuracy_fn = accuracy_fn or accuracy
 
     scaler: torch.cuda.amp.GradScaler = None
@@ -232,7 +232,7 @@ def distillation(module: nn.Module, num_classes: int,
     return best_validate_result
 
 
-def validate(module: nn.Module, num_classes: int,
+def dis_validate(module: nn.Module, num_classes: int,
              loader: torch.utils.data.DataLoader,
              print_prefix: str = 'Validate', indent: int = 0,
              verbose: bool = True,

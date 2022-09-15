@@ -3,7 +3,7 @@
 from trojanzoo.configs import config
 from trojanzoo.datasets import Dataset
 from trojanzoo.environ import env
-from trojanzoo.utils.distillation import distillation
+from trojanzoo.utils.distillation import distillation,dis_validate
 # from trojanzoo.utils.distillation import distillation
 from trojanzoo.utils.fim import KFAC, EKFAC
 from trojanzoo.utils.model import (get_all_layer, get_layer, get_layer_name,
@@ -1040,7 +1040,7 @@ class Model(BasicObject):
             else self.dataset.loader['train']
         get_data_fn = get_data_fn if callable(get_data_fn) else self.get_data
         loss_fn = loss_fn if callable(loss_fn) else self.loss
-        validate_fn = validate_fn if callable(validate_fn) else self._validate
+        validate_fn = validate_fn if callable(validate_fn) else self._dis_validate
         save_fn = save_fn if callable(save_fn) else self.save
         accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
         kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
@@ -1069,6 +1069,40 @@ class Model(BasicObject):
                      writer=writer, main_tag=main_tag, tag=tag,
                      accuracy_fn=accuracy_fn,
                      verbose=verbose, indent=indent, tea_forward_fn=tea_forward_fn, **kwargs)
+
+
+    def _dis_validate(self, module: nn.Module = None, num_classes: int = None,
+                  loader: torch.utils.data.DataLoader = None,
+                  print_prefix: str = 'Validate',
+                  indent: int = 0, verbose: bool = True,
+                  get_data_fn: Callable[
+                      ..., tuple[torch.Tensor, torch.Tensor]] = None,
+                  loss_fn: Callable[..., torch.Tensor] = None,
+                  writer=None, main_tag: str = 'valid',
+                  tag: str = '', _epoch: int = None,
+                  accuracy_fn: Callable[..., list[float]] = None,
+                  tea_arch_parameters=None,
+                  **kwargs) -> tuple[float, float]:
+        r"""Evaluate the model.
+
+        Returns:
+            (float, float): Accuracy and loss.
+        """
+        module = self._model if module is None else module
+        num_classes = self.num_classes if num_classes is None else num_classes
+        loader = loader or self.dataset.loader['valid']
+        get_data_fn = get_data_fn or self.get_data
+        loss_fn = loss_fn or self.loss
+        accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
+        kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
+        return dis_validate(module=module, num_classes=num_classes, loader=loader,
+                        print_prefix=print_prefix,
+                        indent=indent, verbose=verbose,
+                        get_data_fn=get_data_fn,
+                        loss_fn=loss_fn,
+                        writer=writer, main_tag=main_tag, tag=tag,
+                        _epoch=_epoch, accuracy_fn=accuracy_fn,  
+                        tea_arch_parameters=tea_arch_parameters, **kwargs)
 
     def _validate(self, module: nn.Module = None, num_classes: int = None,
                   loader: torch.utils.data.DataLoader = None,
