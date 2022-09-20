@@ -281,6 +281,10 @@ def dis_validate(module: nn.Module, num_classes: int,
     normal_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
     reduce_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[1], stu_arch_parameters[1],2))
 
+    print("tea_arch_parameters_normal: ", tea_arch_parameters[0])
+    print("stu_arch_parameters_normal: ", stu_arch_parameters[0])
+    print("beforeDaig",torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
+    
     print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
     print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
 
