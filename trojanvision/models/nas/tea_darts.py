@@ -4,7 +4,7 @@
 CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --validate_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --batch_size 128 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save
 
 """  # noqa: E501
-  
+from typing import Generator, Iterator, Mapping
 from cProfile import label
 import trojanvision.utils.model_archs.darts as darts
 import torch.nn.functional as F
@@ -212,21 +212,12 @@ class TEA_DARTS(ImageModel):
                                                    weight_decay=arch_weight_decay)
             self.param_list['arch_search'] = ['use_full_train_set', 'arch_optimizer']
 
+
     @property
     def genotype(self) -> Genotype:
         return self._model.features.genotype() if self.supernet else self._model.features.genotype
 
-    def soft_loss(self, _input: torch.Tensor = None, soft_target: torch.Tensor = None,
-             soft_output: torch.Tensor = None, amp: bool = False, **kwargs) -> torch.Tensor:
-        if soft_output is None:
-            soft_output = self(_input, **kwargs)
-        temp = 5.0
-        criterion = nn.KLDivLoss(reduction='batchmean')
-        if amp:
-            with torch.cuda.amp.autocast():
-                return criterion(F.log_softmax(soft_output/temp,dim=1),F.softmax(soft_target/temp,dim=1))
-        return criterion(F.log_softmax(soft_output/temp,dim=1),F.softmax(soft_target/temp,dim=1))
-
+   
     #     return criterion(_output, _label)
     #     soft_loss = nn.KLDivLoss(reduction='batchmean')
     #     if self.auxiliary:
@@ -244,7 +235,7 @@ class TEA_DARTS(ImageModel):
     #     return super().loss(_output=logits, _label=_label) \
     #         + self.auxiliary_weight * super().loss(_output=logits_aux, _label=_label)
 
-    def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
+    def val_loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
              _output: torch.Tensor = None, amp: bool = False, **kwargs) -> torch.Tensor:
         if self.auxiliary:
             assert isinstance(self._model.auxiliary_head, nn.Sequential)
@@ -260,6 +251,20 @@ class TEA_DARTS(ImageModel):
         logits_aux: torch.Tensor = self._model.auxiliary_head(feats_aux)
         return super().loss(_output=logits, _label=_label) \
             + self.auxiliary_weight * super().loss(_output=logits_aux, _label=_label)
+
+    def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None, _soft_label: torch.Tensor = None,
+             _output: torch.Tensor = None, amp: bool = False, **kwargs) -> torch.Tensor:
+        if _output is None:
+            _output = self(_input, **kwargs)
+        if _soft_label is None:
+            return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
+        temp = 5.0
+        criterion = nn.KLDivLoss(reduction='batchmean')
+        if amp:
+            with torch.cuda.amp.autocast():
+                return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_output/temp,dim=1))
+        return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_output/temp,dim=1))
+
 
     def load(self, *args, strict: bool = False, **kwargs):
         return super().load(*args, strict=strict, **kwargs)
@@ -307,6 +312,19 @@ class TEA_DARTS(ImageModel):
     def named_arch_parameters(self) -> list[tuple[str, torch.Tensor]]:
         return self._model.features.named_arch_parameters()
 
+    def get_parameter_from_name(self, name: str = 'full'
+                                ) -> Iterator[nn.Parameter]:
+        match name:
+            case 'features':
+                params = self._model.features.parameters()
+            case 'classifier' | 'partial':
+                params = self._model.classifier.parameters()
+            case 'full':
+                params = itertools.chain(self._model.parameters(), self.arch_parameters())
+            case _:
+                raise NotImplementedError(f'{name=}')
+        return params
+
     def _distillation(self, epochs: int, optimizer: Optimizer, lr_scheduler: _LRScheduler = None,
                adv_train: bool = None,
                lr_warmup_epochs: int = 0,
@@ -346,24 +364,8 @@ class TEA_DARTS(ImageModel):
                 if mode == 'train':
                     _soft_label = tea_forward_fn(_input,**kwargs)
                     _soft_label.detach()
-
-                    # data_valid = next(self.valid_iterator)
-                    # input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
-                    optimizer.zero_grad()
-                    self.arch_optimizer.zero_grad()
-
-
-                    if self.arch_unrolled:# here is backward the a
-                        self._backward_step_unrolled(_input, _label, _soft_label)
-                    else:
-                        _output = self(_input, **kwargs)
-                        loss = self.soft_loss(_input, _soft_label, _output)
-                        # loss.backward(inputs=self.arch_parameters())
-                        loss.backward()
-                    self.arch_optimizer.step()
-                    optimizer.step()
-
-                    return _input, _label, _soft_label, loss, _output
+                    _output = self(_input, **kwargs)
+                    return _input, _label, _soft_label, _output
                 elif mode =='valid':
                     return _input, _label
 

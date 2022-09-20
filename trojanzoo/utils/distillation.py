@@ -130,16 +130,17 @@ def distillation(module: nn.Module, num_classes: int,
             # data_time.update(time.perf_counter() - end)
             # optimizer.zero_grad()
 
-            _input, _label, _soft_label, loss, _output = get_data_fn(data, mode='train')
+            _input, _label, _soft_label, _output = get_data_fn(data, mode='train')
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
+            _output = forward_fn(_input, amp=amp, parallel=True)
+            loss = loss_fn(_input, _soft_label, _output=_output, amp=amp)
             # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
-            # optimizer.zero_grad()
             # _output = forward_fn(_input, amp=amp, parallel=True)
             # loss = soft_loss_fn(_input, soft_target,_output)
             if backward_and_step:
-                # optimizer.zero_grad()
+                optimizer.zero_grad()
                 if amp:
                     scaler.scale(loss).backward()
                     if callable(after_loss_fn) or grad_clip is not None:
@@ -157,7 +158,7 @@ def distillation(module: nn.Module, num_classes: int,
                     scaler.update()
                 else:
                     #backward the weights 
-                    # loss.backward()
+                    loss.backward()
                     if callable(after_loss_fn):#miss
                         after_loss_fn(_input=_input, _label=_label,
                                       _output=_output,
@@ -171,7 +172,7 @@ def distillation(module: nn.Module, num_classes: int,
                         pre_conditioner.step()
                     if grad_clip is not None:
                         nn.utils.clip_grad_norm_(params, grad_clip)
-                    # optimizer.step()
+                    optimizer.step()
 
             if model_ema and i % model_ema_steps == 0:
                 model_ema.update_parameters(module)
@@ -280,6 +281,10 @@ def dis_validate(module: nn.Module, num_classes: int,
     normal_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
     reduce_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[1], stu_arch_parameters[1],2))
 
+    print("tea_arch_parameters_normal: ", tea_arch_parameters[0])
+    print("stu_arch_parameters_normal: ", stu_arch_parameters[0])
+    print("beforeDaig",torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
+    
     print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
     print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
 
