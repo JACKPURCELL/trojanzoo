@@ -257,14 +257,14 @@ class TEA_DARTS(ImageModel):
         if _output is None:
             _output = self(_input, **kwargs)
         if _soft_label is None:
+            print("validate")
             return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
         temp = 5.0
         criterion = nn.KLDivLoss(reduction='batchmean')
         if amp:
             with torch.cuda.amp.autocast():
-                return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_output/temp,dim=1))
-        return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_output/temp,dim=1))
-
+                return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
+        return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
 
     def load(self, *args, strict: bool = False, **kwargs):
         return super().load(*args, strict=strict, **kwargs)
@@ -364,8 +364,8 @@ class TEA_DARTS(ImageModel):
                 if mode == 'train':
                     _soft_label = tea_forward_fn(_input,**kwargs)
                     _soft_label.detach()
-                    _output = self(_input, **kwargs)
-                    return _input, _label, _soft_label, _output
+                    # _output = self(_input, **kwargs)
+                    return _input, _label, _soft_label
                 elif mode =='valid':
                     return _input, _label
 

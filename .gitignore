@@ -51,3 +51,4 @@ useless
 
 # test file
 /test.py
+data/model/image/cifar10/darts_supernet_150ep.pth
