@@ -257,7 +257,7 @@ class TEA_DARTS(ImageModel):
         if _output is None:
             _output = self(_input, **kwargs)
         if _soft_label is None:
-            print("validate")
+            # print("validate")
             return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
         temp = 5.0
         criterion = nn.KLDivLoss(reduction='batchmean')

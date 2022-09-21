@@ -136,7 +136,7 @@ def distillation(module: nn.Module, num_classes: int,
                 #TODO: maybe can remove
             _output = forward_fn(_input, amp=amp, parallel=True)
             loss = loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, amp=amp)
-            print("train loss： ",loss)
+            # print("train loss： ",loss)
             # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
             # _output = forward_fn(_input, amp=amp, parallel=True)
             # loss = soft_loss_fn(_input, soft_target,_output)
