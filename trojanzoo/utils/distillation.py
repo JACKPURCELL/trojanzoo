@@ -52,7 +52,7 @@ def distillation(module: nn.Module, num_classes: int,
     get_data_fn = get_data_fn or (lambda x: x)
     forward_fn = forward_fn or module.__call__
     loss_fn = loss_fn or (lambda _input, _label, _output=None: F.cross_entropy(_output or forward_fn(_input), _label))
-    soft_loss_fn = nn.KLDivLoss(reduction="batchmean")
+
     
     validate_fn = validate_fn or dis_validate 
     accuracy_fn = accuracy_fn or accuracy
@@ -135,7 +135,7 @@ def distillation(module: nn.Module, num_classes: int,
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
             _output = forward_fn(_input, amp=amp, parallel=True)
-            loss = loss_fn(_input, _soft_label, _output=_output, amp=amp)
+            loss = loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, amp=amp)
             # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
             # _output = forward_fn(_input, amp=amp, parallel=True)
             # loss = soft_loss_fn(_input, soft_target,_output)
@@ -273,7 +273,7 @@ def dis_validate(module: nn.Module, num_classes: int,
         _input, _label = get_data_fn(data, mode='valid', **kwargs)
         with torch.no_grad():
             _output = forward_fn(_input)
-            loss = float(loss_fn(_input, _label, _output=_output, **kwargs))
+            loss = float(loss_fn(_input=_input, _label=_label, _output=_output, **kwargs))
             acc1, acc5 = accuracy_fn(
                 _output, _label, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
