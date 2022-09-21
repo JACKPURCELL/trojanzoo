@@ -9,7 +9,7 @@ from cProfile import label
 import trojanvision.utils.model_archs.darts as darts
 import torch.nn.functional as F
 from trojanvision.models.nas.darts import DARTS
-
+from torch.autograd import Variable
 from trojanvision.datasets import ImageSet
 from trojanvision.models.imagemodel import _ImageModel, ImageModel
 from trojanvision.utils.model_archs.darts import FeatureExtractor, AuxiliaryHead, Genotype, genotypes
@@ -43,16 +43,63 @@ url = {
 def _concat(xs: torch.Tensor) -> torch.Tensor:
     return torch.cat([x.flatten() for x in xs])
 
+class Generator(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        # Filters [1024, 512, 256]
+        # Input_dim = 100
+        # Output_dim = C (number of channels)
+        self.main_module = nn.Sequential(
+            # Z latent vector 100
+            nn.ConvTranspose2d(in_channels=100, out_channels=1024, kernel_size=4, stride=1, padding=0),
+            nn.BatchNorm2d(num_features=1024),
+            nn.ReLU(True),
+
+            # State (1024x4x4)
+            nn.ConvTranspose2d(in_channels=1024, out_channels=512, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(num_features=512),
+            nn.ReLU(True),
+
+            # State (512x8x8)
+            nn.ConvTranspose2d(in_channels=512, out_channels=256, kernel_size=4, stride=2, padding=1),
+            nn.BatchNorm2d(num_features=256),
+            nn.ReLU(True),
+
+            # State (256x16x16)
+            nn.ConvTranspose2d(in_channels=256, out_channels=3, kernel_size=4, stride=2, padding=1))
+            # output of main module --> Image (Cx32x32)
+
+        self.output = nn.Tanh()
+
+    def forward(self, x):
+        x = self.main_module(x)
+        return self.output(x)
+
 
 class _DARTS(_ImageModel):
     def __init__(self, auxiliary: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.features: FeatureExtractor | darts.search.FeatureExtractor
+        # self.Generator = Generator()
         self.auxiliary_head: nn.Sequential = None
         if auxiliary:
             self.auxiliary_head = AuxiliaryHead(C=self.features.aux_dim, num_classes=self.num_classes)
         num_features = kwargs.get('num_features', [self.features.feats_dim])
         self.classifier = self.define_classifier(num_features=num_features, num_classes=self.num_classes)
+    
+        # def forward(self, input: torch.Tensor) -> torch.Tensor:
+        # s0 = s1 = self.stem(input)
+        # for cell in self.cells:
+        #     s0, s1 = s1, cell(s0, s1)
+        # return s1
+
+    # def forward(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
+    #     r"""``x -> self.get_final_fm -> self.classifier -> return``"""
+    #     x = self.Generator(x)
+    #     x = self.get_final_fm(x, **kwargs)
+    #     x = self.classifier(x)
+    #     return x
+
 
     @staticmethod
     def define_features(supernet: bool = False,
@@ -63,6 +110,7 @@ class _DARTS(_ImageModel):
         if supernet:
             return darts.search.FeatureExtractor(init_channels, layers, **kwargs)
         return FeatureExtractor(genotype, init_channels, layers, dropout_p, **kwargs)
+
 
 
 class TEA_DARTS(ImageModel):
@@ -162,6 +210,8 @@ class TEA_DARTS(ImageModel):
         # TODO: ImageNet parameter settings
         self.supernet = supernet
         self.arch_search = arch_search
+        self.Generator = Generator().cuda()
+        self.g_optimizer = torch.optim.RMSprop(self.Generator.parameters(), lr=0.00005)
         if supernet:
             name += '_supernet'
         if not supernet and genotype is None:
@@ -211,6 +261,7 @@ class TEA_DARTS(ImageModel):
                                                    lr=arch_lr, betas=(0.5, 0.999),
                                                    weight_decay=arch_weight_decay)
             self.param_list['arch_search'] = ['use_full_train_set', 'arch_optimizer']
+
 
 
     @property
@@ -359,14 +410,25 @@ class TEA_DARTS(ImageModel):
             validate_old = validate_fn
 
             def get_data(data: tuple[torch.Tensor, torch.Tensor], adv_train: bool = False,
-                         mode: str = 'train', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
-                _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
-                if mode == 'train':
+                         mode: str = 'train_STU', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
+
+                if mode == 'train_STU':
+                    _, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                    z = torch.rand((self.dataset.batch_size, 100, 1, 1)).cuda()
+                    _fake_input = self.Generator(z)
+                    _soft_label = tea_forward_fn(_fake_input,**kwargs)
+                    _soft_label.detach()
+                    # _output = self(_input, **kwargs)
+                    return _fake_input, _label, _soft_label
+                elif mode == 'train_GEN':
+                    # _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                    _input = self.Generator(z)
                     _soft_label = tea_forward_fn(_input,**kwargs)
                     _soft_label.detach()
                     # _output = self(_input, **kwargs)
                     return _input, _label, _soft_label
                 elif mode =='valid':
+                    _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                     return _input, _label
 
             def _validate(adv_train: bool = None,
