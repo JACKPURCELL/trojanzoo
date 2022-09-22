@@ -234,6 +234,7 @@ class TEA_DARTS(ImageModel):
         self.arch_lr = arch_lr
         self.arch_weight_decay = arch_weight_decay
         self.arch_unrolled = arch_unrolled
+        # self.count = 1
         super().__init__(name=name, layers=layers, init_channels=init_channels, dropout_p=dropout_p,
                          genotype=genotype, model=model,
                          auxiliary=auxiliary, primitives=primitives,
@@ -411,6 +412,13 @@ class TEA_DARTS(ImageModel):
 
             def get_data(data: tuple[torch.Tensor, torch.Tensor], adv_train: bool = False,
                          mode: str = 'train_STU', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
+                # for test
+                # if self.count > 0 and mode != 'valid':
+                #     mode = 'train_STU'
+                #     self.count -= 1
+                # elif self.count == 0 and mode != 'valid':
+                #     mode = 'train_GEN'
+                #     self.count = 1
 
                 if mode == 'train_STU':
                     _, _label = get_data_old(data, adv_train=adv_train, **kwargs)
@@ -421,12 +429,24 @@ class TEA_DARTS(ImageModel):
                     # _output = self(_input, **kwargs)
                     return _fake_input, _label, _soft_label
                 elif mode == 'train_GEN':
-                    # _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
-                    _input = self.Generator(z)
-                    _soft_label = tea_forward_fn(_input,**kwargs)
+                    _, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                    self.g_optimizer.zero_grad()
+                    z = torch.rand((self.dataset.batch_size, 100, 1, 1)).cuda()
+                    _fake_input = self.Generator(z)
+                    _soft_label = tea_forward_fn(_fake_input,**kwargs)
                     _soft_label.detach()
+                    _output = self(_fake_input, amp=amp, parallel=True)
+                    loss = - self.loss(_input=_fake_input, _soft_label=_soft_label, _output=_output, amp=amp)
+                    loss.backward()
+                    self.g_optimizer.step()
+
+
+                    _fake_input = self.Generator(z)
+                    _soft_label = tea_forward_fn(_fake_input,**kwargs)
+                    _soft_label.detach()
+
                     # _output = self(_input, **kwargs)
-                    return _input, _label, _soft_label
+                    return _fake_input, _label, _soft_label
                 elif mode =='valid':
                     _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                     return _input, _label
