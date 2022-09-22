@@ -123,19 +123,19 @@ def distillation(module: nn.Module, num_classes: int,
         #     pre_conditioner.track.enable()
         # _output = forward_fn(_input, amp=amp, parallel=True)
 #----------------------------------------------------------------
-
+        if _epoch%5 == 0:
+            mode = 'train_GEN'
+            print(_epoch,mode)
+        else:
+            mode = 'train_STU'
+            print(_epoch,mode)
         
         for i, data in enumerate(loader_epoch):
             _iter = _epoch * len_loader_train + i
             # data_time.update(time.perf_counter() - end)
             # optimizer.zero_grad()
 
-            if _epoch%5 == 0:
-                mode = 'train_GEN'
-                print(_epoch,mode)
-            else:
-                mode = 'train_STU'
-                print(_epoch,mode)
+
 
             _input, _label, _soft_label = get_data_fn(data, mode=mode)
             if pre_conditioner is not None and not amp:
