@@ -191,8 +191,9 @@ def distillation(module: nn.Module, num_classes: int,
 
             if lr_scheduler and lr_scheduler_freq == 'iter':
                 lr_scheduler.step()
+            acc1, acc5 = 0.0,0.0
             batch_size = int(_label.size(0))
-            logger.update(n=batch_size, loss=float(loss))
+            logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5)
             empty_cache()
         optimizer.zero_grad()
         if lr_scheduler and lr_scheduler_freq == 'epoch':
