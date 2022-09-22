@@ -439,8 +439,9 @@ class TEA_DARTS(ImageModel):
                     loss = - self.loss(_input=_fake_input, _soft_label=_soft_label, _output=_output, amp=amp)
                     loss.backward()
                     self.g_optimizer.step()
+                    self.g_optimizer.zero_grad()
 
-
+                    z = torch.rand((self.dataset.batch_size, 100, 1, 1)).cuda()
                     _fake_input = self.Generator(z)
                     _soft_label = tea_forward_fn(_fake_input,**kwargs)
                     _soft_label.detach()

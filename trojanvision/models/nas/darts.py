@@ -206,6 +206,9 @@ class DARTS(ImageModel):
                                                    lr=arch_lr, betas=(0.5, 0.999),
                                                    weight_decay=arch_weight_decay)
             self.param_list['arch_search'] = ['use_full_train_set', 'arch_optimizer']
+        print("=====================TEACHER==================")
+        print(self.genotype)
+        print("=====================TEACHER==================")
 
     @property
     def genotype(self) -> Genotype:

@@ -28,6 +28,10 @@ if __name__ == '__main__':
     filename = "./data/model/image/cifar10/darts_supernet_150ep.pth"
     
     tea_model.load(filename)
+    
+    print("=====================AFTER LOAD TEACHER==================")
+    print(tea_model.genotype)
+    print("=====================AFTER LOAD TEACHER==================")
     tea_arch_parameters = tea_model.arch_parameters()
 
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
