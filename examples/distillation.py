@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 r"""
-CUDA_VISIBLE_DEVICES=2 python examples/distillation.py --color --validate_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --batch_size 80 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 50 --save --download
+CUDA_VISIBLE_DEVICES=2 python examples/distillation.py --color --validate_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --batch_size 80 --lr 0.025 --lr_scheduler --lr_min 1e-3 --grad_clip 5.0 --epochs 100 --save --download
 """  # noqa: E501
 
 import trojanvision
@@ -35,7 +35,8 @@ if __name__ == '__main__':
     if env['verbose']:
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
-    # acc, loss = tea_model._validate()
+    acc, loss = tea_model._validate()
+    print("===================Start training================")
     model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_parameters=tea_arch_parameters, **trainer)
 
     # kwargs['model_name'] = 'tea_darts'
