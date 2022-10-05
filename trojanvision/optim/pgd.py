@@ -109,6 +109,7 @@ class PGDoptimizer(trojanzoo.optim.Optimizer):
         b = pgd_eps if isinstance(pgd_eps, torch.Tensor) else torch.as_tensor(pgd_eps)
         condition_alpha = a.allclose(torch.zeros_like(a))
         condition_eps = b.allclose(torch.zeros_like(b))
+        #靠近0不要
         if condition_alpha or condition_eps:
             return _input, None
         # ----------------------------------------------------------------------------------------- #
@@ -118,7 +119,7 @@ class PGDoptimizer(trojanzoo.optim.Optimizer):
                       clip_min=clip_min, clip_max=clip_max)
         return super().optimize(_input, *args, **kwargs)
 
-    def update_input(self, current_idx: torch.Tensor,
+    def update_input(self, current_idx: torch.Tensor, 
                      adv_input: torch.Tensor,
                      org_input: torch.Tensor,
                      noise: torch.Tensor,

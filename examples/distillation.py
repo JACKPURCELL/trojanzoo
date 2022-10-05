@@ -13,13 +13,20 @@ if __name__ == '__main__':
     trojanvision.datasets.add_argument(parser)
     trojanvision.models.add_argument(parser)
     trojanvision.trainer.add_argument(parser)
+    trojanvision.attacks.add_argument(parser)
+
     kwargs = parser.parse_args().__dict__
 
 
     env = trojanvision.environ.create(**kwargs)
     dataset = trojanvision.datasets.create(**kwargs)
     model = trojanvision.models.create(dataset=dataset, **kwargs)
+    mark = trojanvision.marks.create(dataset=dataset, **kwargs)
+    
+    attack = trojanvision.attacks.create(dataset=dataset, model=model, mark=mark, **kwargs)
+    
     kwargs['model_name'] = 'darts'
+
     # kwargs['model'] = 'DARTS'
 
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
@@ -37,7 +44,7 @@ if __name__ == '__main__':
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
 
     if env['verbose']:
-        trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
+        trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer,attack=attack)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
     acc, loss = tea_model._validate()
     print("===================Start training================")

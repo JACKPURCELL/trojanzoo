@@ -2,9 +2,17 @@
 
 r"""--nats_path /data/rbp5354/nats/NATS-tss-v1_0-3ffb9-full"""  # noqa: E501
 
+import itertools
+from typing import Generator, Iterator, Mapping, TYPE_CHECKING
+
 from trojanvision.datasets.imageset import ImageSet
 from trojanvision.models.imagemodel import _ImageModel, ImageModel
+import torch.nn.functional as F
+from trojanzoo.utils.fim import KFAC, EKFAC
 
+from trojanzoo.utils.model import ExponentialMovingAverage
+from torch.optim.optimizer import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
 import torch
 import torch.nn as nn
 from collections import OrderedDict
@@ -13,6 +21,8 @@ import argparse
 from typing import Any
 from collections.abc import Callable
 
+if TYPE_CHECKING:
+    import torch.utils.data
 
 class DARTSCells(nn.ModuleList):
     def __init__(self, cells: nn.ModuleList, alphas: nn.Parameter):
@@ -78,19 +88,28 @@ class _NATSbench(_ImageModel):
 
 class NATSbench(ImageModel):
     r"""NATS-Bench proposed by Xuanyi Dong from University of Technology Sydney.
+
     :Available model names:
+
         .. code-block:: python3
+
             ['nats_bench']
+
     Note:
         There are prerequisites to use the benchmark:
+
         * ``pip install nats_bench``.
         * ``git clone https://github.com/D-X-Y/AutoDL-Projects.git`` and ``pip install .``
         * Extract ``NATS-tss-v1_0-3ffb9-full`` to :attr:`nats_path`.
+
     See Also:
+
         * paper: `NATS-Bench\: Benchmarking NAS Algorithms for Architecture Topology and Size`_
         * code:
+
           - AutoDL: https://github.com/D-X-Y/AutoDL-Projects
           - NATS-Bench: https://github.com/D-X-Y/NATS-Bench
+
     Args:
         model_index (int): :attr:`model_index` passed to
             ``api.get_net_config()``.
@@ -111,6 +130,7 @@ class NATSbench(ImageModel):
             Choose from ``['tss', 'sss']``.
         dataset_name (str): Dataset name.
             Choose from ``['cifar10', 'cifar10-valid', 'cifar100', 'imagenet16-120']``.
+
     .. _NATS-Bench\: Benchmarking NAS Algorithms for Architecture Topology and Size:
         https://arxiv.org/abs/2009.00437
     """
@@ -169,6 +189,46 @@ class NATSbench(ImageModel):
         config = self.api.get_net_config(self.model_index, self.dataset_name)
         return config['arch_str']
 
+    def val_loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
+             _output: torch.Tensor = None, reduction: str = 'batchmean', **kwargs) -> torch.Tensor:
+
+        return super().loss(_input, _label, _output, reduction, **kwargs)
+
+
+    # def arch_parameters(self) -> list[torch.Tensor]:
+    #     return self._model.features.arch_parameters()
+
+    # def named_arch_parameters(self) -> list[tuple[str, torch.Tensor]]:
+    #     return self._model.features.named_arch_parameters()
+    
+    def get_parameter_from_name(self, name: str = 'full'
+                                ) -> Iterator[nn.Parameter]:
+        match name:
+            case 'features':
+                params = self._model.features.parameters()
+            case 'classifier' | 'partial':
+                params = self._model.classifier.parameters()
+            case 'full':
+                params = itertools.chain(self._model.parameters(), self.arch_parameters())
+            case _:
+                raise NotImplementedError(f'{name=}')
+        return params
+    
+    
+    def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None, _soft_label: torch.Tensor = None,
+             _output: torch.Tensor = None, amp: bool = False, reduction: str = 'batchmean',**kwargs) -> torch.Tensor:
+        if _output is None:
+            _output = self(_input, **kwargs)
+        if _soft_label is None:
+            # print("validate")
+            return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
+        temp = 5.0
+        criterion = nn.KLDivLoss(reduction='batchmean')
+        if amp:
+            with torch.cuda.amp.autocast():
+                return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
+        return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
+
     def get_official_weights(self, model_index: int | None = None,
                              model_seed: int | None = None,
                              hp: int | None = None,
@@ -188,3 +248,82 @@ class NATSbench(ImageModel):
             elif k.startswith('classifier'):
                 new_dict['classifier.fc' + k[10:]] = v
         return new_dict
+
+    # def genotype(self) -> Genotype:
+    #     return self._model.features.genotype() if self.supernet else self._model.features.genotype
+
+    def _distillation(self, epochs: int, optimizer: Optimizer, lr_scheduler: _LRScheduler = None,
+               adv_train: bool = None,
+               lr_warmup_epochs: int = 0,
+               model_ema: ExponentialMovingAverage = None,
+               model_ema_steps: int = 32,
+               grad_clip: float = None, pre_conditioner: None | KFAC | EKFAC = None,
+               print_prefix: str = 'Epoch', start_epoch: int = 0, resume: int = 0,
+               validate_interval: int = 10, save: bool = False, amp: bool = False,
+               loader_train: torch.utils.data.DataLoader = None,
+               loader_valid: torch.utils.data.DataLoader = None,
+               epoch_fn: Callable[..., None] = None,
+               get_data_fn: Callable[...,
+                                     tuple[torch.Tensor, torch.Tensor]] = None,
+               loss_fn: Callable[..., torch.Tensor] = None,
+               after_loss_fn: Callable[..., None] = None,
+               validate_fn: Callable[..., tuple[float, float]] = None,
+               save_fn: Callable[..., None] = None, file_path: str = None,
+               folder_path: str = None, suffix: str = None,
+               writer=None, main_tag: str = 'train', tag: str = '',
+               accuracy_fn: Callable[..., list[float]] = None,
+               verbose: bool = True, indent: int = 0, tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
+        get_data_fn = get_data_fn or self.get_data
+        validate_fn = validate_fn or self._dis_validate
+
+
+        get_data_old = get_data_fn
+        validate_old = validate_fn
+
+        def get_data(data: tuple[torch.Tensor, torch.Tensor], adv_train: bool = False,
+                        mode: str = 'train_STU', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
+            # for test
+            # if self.count > 0 and mode != 'valid':
+            #     mode = 'train_STU'
+            #     self.count -= 1
+            # elif self.count == 0 and mode != 'valid':
+            #     mode = 'train_GEN'
+            #     self.count = 1
+
+            if mode == 'train_STU' or mode == 'train_ADV_STU':
+                _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                _soft_label = tea_forward_fn(_input,**kwargs)
+                _soft_label.detach()
+                # _output = self(_input, **kwargs)
+                return _input, _label, _soft_label
+            elif mode =='valid':
+                _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                return _input, _label
+
+        def _validate(adv_train: bool = None,
+                        loader: torch.utils.data.DataLoader = None,
+                        **kwargs) -> tuple[float, float]:
+            # print(self.genotype)
+
+            return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+
+        get_data_fn = get_data
+        validate_fn = _validate
+
+        return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
+                            adv_train=adv_train,
+                            lr_warmup_epochs=lr_warmup_epochs,
+                            model_ema=model_ema, model_ema_steps=model_ema_steps,
+                            grad_clip=grad_clip, pre_conditioner=pre_conditioner,
+                            print_prefix=print_prefix, start_epoch=start_epoch,
+                            resume=resume, validate_interval=validate_interval,
+                            save=save, amp=amp,
+                            loader_train=loader_train, loader_valid=loader_valid,
+                            epoch_fn=epoch_fn, get_data_fn=get_data_fn,
+                            loss_fn=loss_fn, after_loss_fn=after_loss_fn,
+                            validate_fn=validate_fn,
+                            save_fn=save_fn, file_path=file_path,
+                            folder_path=folder_path, suffix=suffix,
+                            writer=writer, main_tag=main_tag, tag=tag,
+                            accuracy_fn=accuracy_fn,
+                            verbose=verbose, indent=indent, tea_forward_fn=tea_forward_fn, **kwargs)

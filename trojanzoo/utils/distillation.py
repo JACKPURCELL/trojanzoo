@@ -123,12 +123,23 @@ def distillation(module: nn.Module, num_classes: int,
         #     pre_conditioner.track.enable()
         # _output = forward_fn(_input, amp=amp, parallel=True)
 #----------------------------------------------------------------
-        if _epoch%5 == 0:
-            mode = 'train_GEN'
+#-------------------------new---------------------------------------
+
+        if _epoch < 0:
+            mode = 'train_STU' #kl loss / return raw data
             print(_epoch,mode)
-        else:
-            mode = 'train_STU'
+        elif _epoch >= 0 and _epoch < 20:
+            mode = 'train_ADV_STU'  #kl loss / return adv data
             print(_epoch,mode)
+
+
+#---------------------------new-------------------------------------
+        # if _epoch%5 == 0:
+        #     mode = 'train_GEN'
+        #     print(_epoch,mode)
+        # else:
+        #     mode = 'train_STU'
+        #     print(_epoch,mode)
         
         for i, data in enumerate(loader_epoch):
             _iter = _epoch * len_loader_train + i
@@ -136,8 +147,8 @@ def distillation(module: nn.Module, num_classes: int,
             # optimizer.zero_grad()
 
 
-
             _input, _label, _soft_label = get_data_fn(data, mode=mode)
+            
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
@@ -153,7 +164,7 @@ def distillation(module: nn.Module, num_classes: int,
                     scaler.scale(loss).backward()
                     if callable(after_loss_fn) or grad_clip is not None:
                         scaler.unscale_(optimizer)
-                    if callable(after_loss_fn):
+                    if callable(after_loss_fn) and mode == 'train_ADV_STU':
                         after_loss_fn(_input=_input, _label=_label,
                                       _output=_output,
                                       loss=loss, optimizer=optimizer,
@@ -167,7 +178,7 @@ def distillation(module: nn.Module, num_classes: int,
                 else:
                     #backward the weights 
                     loss.backward()
-                    if callable(after_loss_fn):#miss
+                    if callable(after_loss_fn) and mode == 'train_ADV_STU':#miss
                         after_loss_fn(_input=_input, _label=_label,
                                       _output=_output,
                                       loss=loss, optimizer=optimizer,

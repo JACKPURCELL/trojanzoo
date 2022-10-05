@@ -70,6 +70,7 @@ class PGD(Attack, PGDoptimizer):
         self.model: 'ImageModel'
 
     def attack(self, verbose: int = 1, **kwargs) -> tuple[float, float]:
+        # 
         validset = self.dataset.get_dataset('valid')
         testset, _ = self.dataset.split_dataset(validset, percent=0.3)
         loader = self.dataset.get_dataloader(mode='valid', dataset=testset,
@@ -91,6 +92,7 @@ class PGD(Attack, PGDoptimizer):
             rest_length = self.test_num - total_adv_target_conf.count
             if rest_length <= 0:
                 break
+            #移除错误分类的部分
             _input, _label = self.model.remove_misclassify(data)
             if len(_label) == 0:
                 continue
@@ -98,14 +100,19 @@ class PGD(Attack, PGDoptimizer):
             if len(_label) > rest_length:
                 _input = _input[:rest_length]
                 _label = _label[:rest_length]
+
+                #    _output: torch.Tensor = module(_input)
+    # target = _output.argsort(dim=-1, descending=True)[:, idx]
             target = self.generate_target(_input, idx=self.target_idx) if self.target_class is None \
                 else self.target_class * torch.ones_like(_label)
             adv_input = _input.clone().detach()
             iter_list = -torch.ones(len(_label), dtype=torch.long)
             current_idx = torch.arange(len(iter_list))
             for _ in range(max(self.num_restart, 1)):
+                #生成对抗样本
                 temp_adv_input, temp_iter_list = self.optimize(_input[current_idx],
                                                                target=target[current_idx], **kwargs)
+                #存储对抗样本到list                                               
                 adv_input[current_idx] = temp_adv_input
                 iter_list[current_idx] = temp_iter_list
                 fail_idx = iter_list == -1

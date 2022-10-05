@@ -6,6 +6,7 @@ CUDA_VISIBLE_DEVICES=0 python examples/distillation.py --color --validate_interv
 """  # noqa: E501
 from typing import Generator, Iterator, Mapping
 from cProfile import label
+
 import trojanvision.utils.model_archs.darts as darts
 import torch.nn.functional as F
 from trojanvision.models.nas.darts import DARTS
@@ -24,12 +25,17 @@ from collections import OrderedDict
 
 from typing import TYPE_CHECKING
 from trojanzoo.utils.fim import KFAC, EKFAC
+from trojanzoo.utils.logger import SmoothedValue
 from trojanzoo.utils.model import ExponentialMovingAverage
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 import torch.utils.data
 import argparse  # TODO: python 3.10
 from collections.abc import Callable
+
+from trojanzoo.utils.output import ansi
+
+from trojanzoo.utils.output import prints
 if TYPE_CHECKING:
     pass
 
@@ -112,7 +118,9 @@ class _DARTS(_ImageModel):
         return FeatureExtractor(genotype, init_channels, layers, dropout_p, **kwargs)
 
 
-
+  
+    
+    
 class TEA_DARTS(ImageModel):
     r"""DARTS-like models used in Neural Architecture Search.
 
@@ -211,6 +219,7 @@ class TEA_DARTS(ImageModel):
         self.supernet = supernet
         self.arch_search = arch_search
         self.Generator = Generator().cuda()
+
         self.g_optimizer = torch.optim.RMSprop(self.Generator.parameters(), lr=0.00005)
         if supernet:
             name += '_supernet'
@@ -420,34 +429,12 @@ class TEA_DARTS(ImageModel):
                 #     mode = 'train_GEN'
                 #     self.count = 1
 
-                if mode == 'train_STU':
-                    _, _label = get_data_old(data, adv_train=adv_train, **kwargs)
-                    z = torch.rand((self.dataset.batch_size, 100, 1, 1)).cuda()
-                    _fake_input = self.Generator(z)
-                    _soft_label = tea_forward_fn(_fake_input,**kwargs)
+                if mode == 'train_STU' or mode == 'train_ADV_STU':
+                    _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                    _soft_label = tea_forward_fn(_input,**kwargs)
                     _soft_label.detach()
                     # _output = self(_input, **kwargs)
-                    return _fake_input, _label, _soft_label
-                elif mode == 'train_GEN':
-                    _, _label = get_data_old(data, adv_train=adv_train, **kwargs)
-                    self.g_optimizer.zero_grad()
-                    z = torch.rand((self.dataset.batch_size, 100, 1, 1)).cuda()
-                    _fake_input = self.Generator(z)
-                    _soft_label = tea_forward_fn(_fake_input,**kwargs)
-                    _soft_label.detach()
-                    _output = self(_fake_input, amp=amp, parallel=True)
-                    loss = - self.loss(_input=_fake_input, _soft_label=_soft_label, _output=_output, amp=amp)
-                    loss.backward()
-                    self.g_optimizer.step()
-                    self.g_optimizer.zero_grad()
-
-                    z = torch.rand((self.dataset.batch_size, 100, 1, 1)).cuda()
-                    _fake_input = self.Generator(z)
-                    _soft_label = tea_forward_fn(_fake_input,**kwargs)
-                    _soft_label.detach()
-
-                    # _output = self(_input, **kwargs)
-                    return _fake_input, _label, _soft_label
+                    return _input, _label, _soft_label
                 elif mode =='valid':
                     _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                     return _input, _label
