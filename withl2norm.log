@@ -252,7 +252,7 @@ Genotype(normal=[('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1), 
 Validate                      loss: 3.068         top1: 48.690        top5: 91.230        time: 00:12
 Traceback (most recent call last):
   File "/home/jkl6486/trojanzoo/examples/distillation.py", line 39, in <module>
-    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_parameters=tea_arch_parameters, **trainer)
+    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_list=tea_arch_list, **trainer)
   File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 383, in _distillation
     return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
   File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 652, in _distillation
@@ -262,13 +262,13 @@ Traceback (most recent call last):
   File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 208, in distillation
     validate_result = validate_fn(module=module,
   File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 378, in _validate
-    return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+    return validate_old(loader=loader, adv_train=adv_train, stu_arch_list=self.arch_parameters() ,**kwargs)
   File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 674, in _dis_validate
-    return super()._dis_validate(stu_arch_parameters=stu_arch_parameters, **kwargs)
+    return super()._dis_validate(stu_arch_list=stu_arch_list, **kwargs)
   File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1101, in _dis_validate
     return dis_validate(module=module, num_classes=num_classes, loader=loader,
   File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 279, in dis_validate
-    normal_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
+    normal_L2_norm = torch.diag(torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
 TypeError: 'NoneType' object is not subscriptable
 (trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ CUDA_VISIBLE_DEVICES=3 python examples/distillation.py --color --valida
 te_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --b
@@ -468,7 +468,7 @@ Genotype(normal=[('max_pool_3x3', 0), ('max_pool_3x3', 1), ('max_pool_3x3', 1), 
 Validate                      loss: 3.013         top1: 48.200        top5: 91.920        time: 00:13
 Traceback (most recent call last):
   File "/home/jkl6486/trojanzoo/examples/distillation.py", line 39, in <module>
-    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_parameters=tea_arch_parameters, **trainer)
+    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_list=tea_arch_list, **trainer)
   File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 383, in _distillation
     return super()._distillation(epochs=epochs, optimizer=optimizer, lr_scheduler=lr_scheduler,
   File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 652, in _distillation
@@ -478,13 +478,13 @@ Traceback (most recent call last):
   File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 208, in distillation
     validate_result = validate_fn(module=module,
   File "/home/jkl6486/trojanzoo/trojanvision/models/nas/tea_darts.py", line 378, in _validate
-    return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+    return validate_old(loader=loader, adv_train=adv_train, stu_arch_list=self.arch_parameters() ,**kwargs)
   File "/home/jkl6486/trojanzoo/trojanvision/models/imagemodel.py", line 674, in _dis_validate
-    return super()._dis_validate(stu_arch_parameters=stu_arch_parameters, **kwargs)
+    return super()._dis_validate(stu_arch_list=stu_arch_list, **kwargs)
   File "/home/jkl6486/trojanzoo/trojanzoo/models.py", line 1101, in _dis_validate
     return dis_validate(module=module, num_classes=num_classes, loader=loader,
   File "/home/jkl6486/trojanzoo/trojanzoo/utils/distillation.py", line 279, in dis_validate
-    print(tea_arch_parameters[0])
+    print(tea_arch_list[0])
 TypeError: 'NoneType' object is not subscriptable
 (trojanzoo) jkl6486@i4-l-tbw5359-02:~/trojanzoo$ CUDA_VISIBLE_DEVICES=3 python examples/distillation.py --color --valida
 te_interval 1 --verbose 1 --dataset cifar10 --model tea_darts --supernet --arch_search --layers 8 --init_channels 16 --b

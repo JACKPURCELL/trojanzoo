@@ -17,6 +17,9 @@ nas
 .. autoclass:: NATSbench
    :members:
 
+.. autoclass:: STU_NATSbench
+   :members:
+
 .. autoclass:: PNASNet
    :members:
 

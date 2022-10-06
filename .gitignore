@@ -52,3 +52,7 @@ useless
 # test file
 /test.py
 data/model/image/cifar10/darts_supernet_150ep.pth
+data/model/image/cifar10/darts_supernet_150ep.pth
+withl2norm.log
+data/model/image/cifar10/darts_supernet_150ep.pth
+data/model/image/cifar10/stu_nats_bench_at-pgd.pth

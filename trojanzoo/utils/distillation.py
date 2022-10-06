@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 from trojanzoo.utils.fim import KFAC, EKFAC
 from trojanzoo.utils.logger import MetricLogger
 from trojanzoo.utils.memory import empty_cache
@@ -22,6 +23,7 @@ import torch.utils.data
 
 def distillation(module: nn.Module, num_classes: int,
           epochs: int, optimizer: Optimizer, lr_scheduler: _LRScheduler = None,
+          adv_train: bool = None,
           lr_warmup_epochs: int = 0,
           model_ema: ExponentialMovingAverage = None,
           model_ema_steps: int = 32,
@@ -43,7 +45,7 @@ def distillation(module: nn.Module, num_classes: int,
           verbose: bool = True, output_freq: str = 'iter', indent: int = 0,
           change_train_eval: bool = True, lr_scheduler_freq: str = 'epoch',
           backward_and_step: bool = True, 
-          tea_arch_parameters = None,
+          tea_arch_list = None,
           tea_forward_fn: Callable[..., torch.Tensor] = None,
           **kwargs):
     r"""Train the model"""
@@ -67,7 +69,7 @@ def distillation(module: nn.Module, num_classes: int,
         best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
                                            forward_fn=forward_fn, loss_fn=loss_fn,
                                            writer=None, tag=tag, _epoch=start_epoch,
-                                           verbose=verbose, indent=indent, tea_arch_parameters= tea_arch_parameters, **kwargs)
+                                           verbose=verbose, indent=indent, tea_arch_list= tea_arch_list, **kwargs)
         best_acc = best_validate_result[0]
 
     params: list[nn.Parameter] = []
@@ -125,10 +127,10 @@ def distillation(module: nn.Module, num_classes: int,
 #----------------------------------------------------------------
 #-------------------------new---------------------------------------
 
-        if _epoch < 0:
+        if _epoch < 20:
             mode = 'train_STU' #kl loss / return raw data
             print(_epoch,mode)
-        elif _epoch >= 0 and _epoch < 20:
+        elif _epoch >= 20 :
             mode = 'train_ADV_STU'  #kl loss / return adv data
             print(_epoch,mode)
 
@@ -179,6 +181,7 @@ def distillation(module: nn.Module, num_classes: int,
                     #backward the weights 
                     loss.backward()
                     if callable(after_loss_fn) and mode == 'train_ADV_STU':#miss
+                        # print("after_loss_fn+train_ADV_STU")
                         after_loss_fn(_input=_input, _label=_label,
                                       _output=_output,
                                       loss=loss, optimizer=optimizer,
@@ -233,7 +236,7 @@ def distillation(module: nn.Module, num_classes: int,
                                           writer=writer, tag=tag,
                                           _epoch=_epoch + start_epoch,
                                           verbose=verbose, indent=indent,
-                                          tea_arch_parameters=tea_arch_parameters,
+                                          tea_arch_list=tea_arch_list,
                                           **kwargs)
             cur_acc = validate_result[0]
             if cur_acc >= best_acc:
@@ -265,8 +268,8 @@ def dis_validate(module: nn.Module, num_classes: int,
              writer=None, main_tag: str = 'valid',
              tag: str = '', _epoch: int = None,
              accuracy_fn: Callable[..., list[float]] = None,
-              tea_arch_parameters=None,
-              stu_arch_parameters=None,
+              tea_arch_list=None,
+              stu_arch_list=None,
              **kwargs) -> tuple[float, float]:
     r"""Evaluate the model.
 
@@ -296,15 +299,23 @@ def dis_validate(module: nn.Module, num_classes: int,
                 _output, _label, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
             logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5)
-    normal_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
-    reduce_L2_norm = torch.diag(torch.cdist(tea_arch_parameters[1], stu_arch_parameters[1],2))
-
-    # print("tea_arch_parameters_normal: ", tea_arch_parameters[0])
-    # print("stu_arch_parameters_normal: ", stu_arch_parameters[0])
-    # print("beforeDaig",torch.cdist(tea_arch_parameters[0], stu_arch_parameters[0],2))
+            
     
-    print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
-    print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
+
+    diff = 0
+    for i,j in zip(tea_arch_list,stu_arch_list):
+        if i != j:
+            diff += 1
+    print("Difference: ",float(diff)/float(len(stu_arch_list)))
+    # normal_L2_norm = torch.diag(torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
+    # reduce_L2_norm = torch.diag(torch.cdist(tea_arch_list[1], stu_arch_list[1],2))
+
+    # print("tea_arch_list_normal: ", tea_arch_list[0])
+    # print("stu_arch_list_normal: ", stu_arch_list[0])
+    # print("beforeDaig",torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
+    
+    # print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
+    # print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
 
     acc, loss = (logger.meters['top1'].global_avg,
                  logger.meters['loss'].global_avg)

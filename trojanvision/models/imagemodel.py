@@ -596,7 +596,7 @@ class ImageModel(Model):
                writer=None, main_tag: str = 'train', tag: str = '',
                accuracy_fn: Callable[..., list[float]] = None,
                verbose: bool = True, indent: int = 0, 
-               tea_arch_parameters=None,
+               tea_arch_list=None,
                tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         adv_train = adv_train if adv_train is not None else bool(self.adv_train)
         if adv_train:
@@ -665,17 +665,17 @@ class ImageModel(Model):
                               folder_path=folder_path, suffix=suffix,
                               writer=writer, main_tag=main_tag, tag=tag,
                               accuracy_fn=accuracy_fn,
-                              verbose=verbose, indent=indent, tea_arch_parameters=tea_arch_parameters, tea_forward_fn=tea_forward_fn,**kwargs)
+                              verbose=verbose, indent=indent, tea_arch_list=tea_arch_list, tea_forward_fn=tea_forward_fn,**kwargs)
 
-    def _dis_validate(self, adv_train: None | bool | str = None, stu_arch_parameters=None, **kwargs) -> tuple[float, float]:
+    def _dis_validate(self, adv_train: None | bool | str = None, stu_arch_list=None, **kwargs) -> tuple[float, float]:
         r""""""
         adv_train = bool(adv_train) if adv_train is not None else bool(self.adv_train)
         if not adv_train:
-            return super()._dis_validate(stu_arch_parameters=stu_arch_parameters, **kwargs)
+            return super()._dis_validate(stu_arch_list=stu_arch_list, **kwargs)
         clean_acc, _ = super()._dis_validate(print_prefix='Validate Clean', main_tag='valid clean',
-                                         adv_train=False, stu_arch_parameters=stu_arch_parameters, **kwargs)
+                                         adv_train=False, stu_arch_list=stu_arch_list, **kwargs)
         adv_acc, _ = super()._dis_validate(print_prefix='Validate Adv', main_tag='valid adv',
-                                       adv_train=True, stu_arch_parameters=stu_arch_parameters, **kwargs)
+                                       adv_train=True, stu_arch_list=stu_arch_list, **kwargs)
         return clean_acc + adv_acc, adv_acc
 
     def adv_loss(self, _input: torch.Tensor, _label: torch.Tensor,

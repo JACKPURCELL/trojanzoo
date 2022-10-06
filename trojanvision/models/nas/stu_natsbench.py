@@ -3,6 +3,7 @@
 r"""--nats_path /data/rbp5354/nats/NATS-tss-v1_0-3ffb9-full"""  # noqa: E501
 
 import itertools
+import re
 from typing import Generator, Iterator, Mapping, TYPE_CHECKING
 
 from trojanvision.datasets.imageset import ImageSet
@@ -86,7 +87,7 @@ class _NATSbench(_ImageModel):
             raise TypeError(f'Cells are not DARTSCells but {type(self.features.cells)}')
 
 
-class NATSbench(ImageModel):
+class STU_NATSbench(ImageModel):
     r"""NATS-Bench proposed by Xuanyi Dong from University of Technology Sydney.
 
     :Available model names:
@@ -134,7 +135,7 @@ class NATSbench(ImageModel):
     .. _NATS-Bench\: Benchmarking NAS Algorithms for Architecture Topology and Size:
         https://arxiv.org/abs/2009.00437
     """
-    available_models = ['nats_bench']
+    available_models = ['stu_nats_bench']
 
     @classmethod
     def add_argument(cls, group: argparse._ArgumentGroup):
@@ -209,7 +210,7 @@ class NATSbench(ImageModel):
             case 'classifier' | 'partial':
                 params = self._model.classifier.parameters()
             case 'full':
-                params = itertools.chain(self._model.parameters(), self.arch_parameters())
+                params = itertools.chain(self._model.parameters(), self._model.arch_parameters())
             case _:
                 raise NotImplementedError(f'{name=}')
         return params
@@ -304,8 +305,9 @@ class NATSbench(ImageModel):
                         loader: torch.utils.data.DataLoader = None,
                         **kwargs) -> tuple[float, float]:
             # print(self.genotype)
-
-            return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+            stu_arch_list = list(filter(None, re.split('\+|\|',self.arch_str)))
+            
+            return validate_old(loader=loader, adv_train=adv_train, stu_arch_list=stu_arch_list ,**kwargs)
 
         get_data_fn = get_data
         validate_fn = _validate

@@ -447,7 +447,7 @@ class TEA_DARTS(ImageModel):
                 #     super()._validate(loader=self.train3,
                 #                       adv_train=adv_train,
                 #                       print_prefix='TrainVal', **kwargs)
-                return validate_old(loader=loader, adv_train=adv_train, stu_arch_parameters=self.arch_parameters() ,**kwargs)
+                return validate_old(loader=loader, adv_train=adv_train, stu_arch_list=self.arch_parameters() ,**kwargs)
 
             get_data_fn = get_data
             validate_fn = _validate
