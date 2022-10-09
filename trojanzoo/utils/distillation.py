@@ -127,10 +127,10 @@ def distillation(module: nn.Module, num_classes: int,
 #----------------------------------------------------------------
 #-------------------------new---------------------------------------
 
-        if _epoch < 20:
+        if _epoch < 0:
             mode = 'train_STU' #kl loss / return raw data
             print(_epoch,mode)
-        elif _epoch >= 20 :
+        elif _epoch >= 0 :
             mode = 'train_ADV_STU'  #kl loss / return adv data
             print(_epoch,mode)
 
@@ -168,7 +168,7 @@ def distillation(module: nn.Module, num_classes: int,
                         scaler.unscale_(optimizer)
                     if callable(after_loss_fn) and mode == 'train_ADV_STU':
                         after_loss_fn(_input=_input, _label=_label,
-                                      _output=_output,
+                                      _soft_label=_soft_label, _output=_output,
                                       loss=loss, optimizer=optimizer,
                                       loss_fn=loss_fn,
                                       amp=amp, scaler=scaler,
@@ -183,7 +183,7 @@ def distillation(module: nn.Module, num_classes: int,
                     if callable(after_loss_fn) and mode == 'train_ADV_STU':#miss
                         # print("after_loss_fn+train_ADV_STU")
                         after_loss_fn(_input=_input, _label=_label,
-                                      _output=_output,
+                                      _soft_label=_soft_label, _output=_output,
                                       loss=loss, optimizer=optimizer,
                                       loss_fn=loss_fn,
                                       amp=amp, scaler=scaler,

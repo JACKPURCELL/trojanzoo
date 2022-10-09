@@ -193,7 +193,7 @@ class PGD(Attack, PGDoptimizer):
             untarget_condition = self.target_class is None and self.target_idx == 0
 
             def _loss_fn(_input: torch.Tensor, target: torch.Tensor, reduction: str = 'mean', **kwargs):
-                loss = self.model.loss(_input, target, reduction=reduction)
+                loss = self.model.loss(_input=_input, _soft_label=target, reduction=reduction)
                 return -loss if untarget_condition else loss
             loss_fn = _loss_fn
         loss_kwargs.update(target=target)

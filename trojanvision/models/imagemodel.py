@@ -605,7 +605,7 @@ class ImageModel(Model):
                 after_loss_fn_old = getattr(self, 'after_loss_fn')
             loss_fn = loss_fn if callable(loss_fn) else self.loss
 
-            def after_loss_fn_new(_input: torch.Tensor, _label: torch.Tensor, _output: torch.Tensor,
+            def after_loss_fn_new(_input: torch.Tensor, _label: torch.Tensor, _soft_label: torch.Tensor, _output: torch.Tensor,
                                   loss: torch.Tensor, optimizer: Optimizer, loss_fn: Callable[..., torch.Tensor] = None,
                                   amp: bool = False, scaler: torch.cuda.amp.GradScaler = None, **kwargs):
                 optimizer.zero_grad()
@@ -614,6 +614,7 @@ class ImageModel(Model):
                     pre_conditioner.reset()
 
                 if self.adv_train == 'free':
+                    #TODO:need to verify _soft_label
                     noise = self.pgd.init_noise(_input.shape, pgd_eps=self.adv_train_eps,
                                                 random_init=self.adv_train_random_init,
                                                 device=_input.device)
@@ -621,7 +622,7 @@ class ImageModel(Model):
                                       clip_min=self.pgd.clip_min, clip_max=self.pgd.clip_max)
                     noise.data = self.pgd.valid_noise(adv_x, _input)
                     for m in range(self.adv_train_iter):
-                        loss = loss_fn(adv_x, _label)
+                        loss = loss_fn(adv_x, _soft_label)
                         if amp:
                             scaler.scale(loss).backward()
                             scaler.step(optimizer)
@@ -632,12 +633,12 @@ class ImageModel(Model):
                         optimizer.zero_grad()
                         self.zero_grad()
                         # self.eval()
-                        adv_x, _ = self.pgd.optimize(_input=_input, noise=noise, target=_label, iteration=1,
+                        adv_x, _ = self.pgd.optimize(_input=_input, noise=noise, target=_soft_label, iteration=1,
                                                      pgd_alpha=self.adv_train_alpha, pgd_eps=self.adv_train_eps)
                         # self.train()
-                        loss = loss_fn(adv_x, _label)
+                        loss = loss_fn(adv_x, _soft_label)
                 else:
-                    loss = self.adv_loss(_input=_input, _label=_label, loss_fn=loss_fn)
+                    loss = self.adv_loss(_input=_input, _label=_label, _soft_label=_soft_label, loss_fn=loss_fn)
 
                 if amp:
                     scaler.scale(loss).backward()
@@ -678,7 +679,7 @@ class ImageModel(Model):
                                        adv_train=True, stu_arch_list=stu_arch_list, **kwargs)
         return clean_acc + adv_acc, adv_acc
 
-    def adv_loss(self, _input: torch.Tensor, _label: torch.Tensor,
+    def adv_loss(self, _input: torch.Tensor, _label: torch.Tensor, _soft_label: torch.Tensor,
                  loss_fn: Callable[..., torch.Tensor] = None,
                  adv_train: str = None) -> torch.Tensor:
         adv_train = adv_train if adv_train is not None else self.adv_train
@@ -697,7 +698,7 @@ class ImageModel(Model):
                 return loss_fn(_input, _label) - self.adv_train_trades_beta * \
                     self.trades_loss_fn(_input=adv_x, org_prob=org_prob)
             case 'pgd':
-                adv_x, _ = self.pgd.optimize(_input=_input, target=_label,
+                adv_x, _ = self.pgd.optimize(_input=_input, target=_soft_label,
                                              iteration=self.adv_train_iter,
                                              pgd_alpha=self.adv_train_alpha,
                                              pgd_eps=self.adv_train_eps,
