@@ -638,7 +638,7 @@ class ImageModel(Model):
                         # self.train()
                         loss = loss_fn(adv_x, _soft_label)
                 else:
-                    loss = self.adv_loss(_input=_input, _label=_label, _soft_label=_soft_label, loss_fn=loss_fn)
+                    loss = self.adv_loss(_input=_input, _label=_label, _soft_label=_soft_label, loss_fn=loss_fn,tea_forward_fn=tea_forward_fn,**kwargs)
 
                 if amp:
                     scaler.scale(loss).backward()
@@ -681,7 +681,7 @@ class ImageModel(Model):
 
     def adv_loss(self, _input: torch.Tensor, _label: torch.Tensor, _soft_label: torch.Tensor,
                  loss_fn: Callable[..., torch.Tensor] = None,
-                 adv_train: str = None) -> torch.Tensor:
+                 adv_train: str = None,tea_forward_fn: Callable[..., torch.Tensor] = None,**kwargs) -> torch.Tensor:
         adv_train = adv_train if adv_train is not None else self.adv_train
         loss_fn = loss_fn if callable(loss_fn) else self.loss
         match adv_train:
@@ -704,6 +704,8 @@ class ImageModel(Model):
                                              pgd_eps=self.adv_train_eps,
                                              random_init=self.adv_train_random_init)
                 adv_x = _input + (adv_x - _input).detach()
-                return loss_fn(adv_x, _label)
+                #TODO:重算
+                _adv_soft_label = tea_forward_fn(adv_x,**kwargs)
+                return loss_fn(_input=adv_x, _soft_label=_adv_soft_label)
             case _:
                 raise NotImplementedError(f'{adv_train=} is not supported yet.')
