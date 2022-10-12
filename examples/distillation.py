@@ -74,8 +74,27 @@ if __name__ == '__main__':
     #             break
                 
     # stu_features[0].edges['3<-2'][0]
-    tea_arch_list = list(filter(None, re.split('\+|\|',tea_model.arch_str)))
-   
+    def fun(variable):
+        num = ['0','1','2','3','4','5','6','7','8','9','']
+        if (variable in num):
+            return False
+        else:
+            return True
+    tea_arch_list = list(filter(fun, re.split('\+|\||~',tea_model.arch_str)))
+    # ['nor_conv_1x1', 'none', 'nor_conv_1x1', 'skip_connect', 'skip_connect', 'nor_conv_3x3']
+    op_list =  [
+        "none",
+        "skip_connect",
+        "nor_conv_1x1",
+        "nor_conv_3x3",
+        "avg_pool_3x3",
+    ]
+    tea_arch_tensor = torch.zeros(6, 5).cuda()
+    for i in range(0, len(tea_arch_list)):
+        index=op_list.index(tea_arch_list[i])
+        tea_arch_tensor[i][index] = 1
+        
+
     
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
 
@@ -83,9 +102,9 @@ if __name__ == '__main__':
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
     print("=====================TEACHER VALIDATE==================")
-    acc, loss = tea_model._validate()
+    # acc, loss = tea_model._validate()
     print("===================Start training================")
-    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_list=tea_arch_list, **trainer)
+    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_tensor=tea_arch_tensor, **trainer)
 
     # kwargs['model_name'] = 'tea_darts'
 

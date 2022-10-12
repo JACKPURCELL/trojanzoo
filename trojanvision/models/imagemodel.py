@@ -596,7 +596,7 @@ class ImageModel(Model):
                writer=None, main_tag: str = 'train', tag: str = '',
                accuracy_fn: Callable[..., list[float]] = None,
                verbose: bool = True, indent: int = 0, 
-               tea_arch_list=None,
+               tea_arch_tensor=None,
                tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         adv_train = adv_train if adv_train is not None else bool(self.adv_train)
         if adv_train:
@@ -607,7 +607,8 @@ class ImageModel(Model):
 
             def after_loss_fn_new(_input: torch.Tensor, _label: torch.Tensor, _soft_label: torch.Tensor, _output: torch.Tensor,
                                   loss: torch.Tensor, optimizer: Optimizer, loss_fn: Callable[..., torch.Tensor] = None,
-                                  amp: bool = False, scaler: torch.cuda.amp.GradScaler = None, **kwargs):
+                                  amp: bool = False, scaler: torch.cuda.amp.GradScaler = None, 
+                                  tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
                 optimizer.zero_grad()
                 self.zero_grad()
                 if pre_conditioner is not None:
@@ -622,7 +623,7 @@ class ImageModel(Model):
                                       clip_min=self.pgd.clip_min, clip_max=self.pgd.clip_max)
                     noise.data = self.pgd.valid_noise(adv_x, _input)
                     for m in range(self.adv_train_iter):
-                        loss = loss_fn(adv_x, _soft_label)
+                        loss = loss_fn(_input=adv_x, _soft_label=_soft_label)
                         if amp:
                             scaler.scale(loss).backward()
                             scaler.step(optimizer)
@@ -636,7 +637,8 @@ class ImageModel(Model):
                         adv_x, _ = self.pgd.optimize(_input=_input, noise=noise, target=_soft_label, iteration=1,
                                                      pgd_alpha=self.adv_train_alpha, pgd_eps=self.adv_train_eps)
                         # self.train()
-                        loss = loss_fn(adv_x, _soft_label)
+                        _adv_soft_label = tea_forward_fn(adv_x, **kwargs)
+                        loss = loss_fn(_input=adv_x, _soft_label=_adv_soft_label)
                 else:
                     loss = self.adv_loss(_input=_input, _label=_label, _soft_label=_soft_label, loss_fn=loss_fn,tea_forward_fn=tea_forward_fn,**kwargs)
 
@@ -666,17 +668,17 @@ class ImageModel(Model):
                               folder_path=folder_path, suffix=suffix,
                               writer=writer, main_tag=main_tag, tag=tag,
                               accuracy_fn=accuracy_fn,
-                              verbose=verbose, indent=indent, tea_arch_list=tea_arch_list, tea_forward_fn=tea_forward_fn,**kwargs)
+                              verbose=verbose, indent=indent, tea_arch_tensor=tea_arch_tensor, tea_forward_fn=tea_forward_fn,**kwargs)
 
-    def _dis_validate(self, adv_train: None | bool | str = None, stu_arch_list=None, **kwargs) -> tuple[float, float]:
+    def _dis_validate(self, adv_train: None | bool | str = None, stu_arch_tensor=None, tea_forward_fn: Callable[..., torch.Tensor] = None,**kwargs) -> tuple[float, float]:
         r""""""
         adv_train = bool(adv_train) if adv_train is not None else bool(self.adv_train)
         if not adv_train:
-            return super()._dis_validate(stu_arch_list=stu_arch_list, **kwargs)
+            return super()._dis_validate(stu_arch_tensor=stu_arch_tensor, tea_forward_fn=tea_forward_fn,**kwargs)
         clean_acc, _ = super()._dis_validate(print_prefix='Validate Clean', main_tag='valid clean',
-                                         adv_train=False, stu_arch_list=stu_arch_list, **kwargs)
+                                         adv_train=False, stu_arch_tensor=stu_arch_tensor, tea_forward_fn=tea_forward_fn,**kwargs)
         adv_acc, _ = super()._dis_validate(print_prefix='Validate Adv', main_tag='valid adv',
-                                       adv_train=True, stu_arch_list=stu_arch_list, **kwargs)
+                                       adv_train=True, stu_arch_tensor=stu_arch_tensor, tea_forward_fn=tea_forward_fn,**kwargs)
         return clean_acc + adv_acc, adv_acc
 
     def adv_loss(self, _input: torch.Tensor, _label: torch.Tensor, _soft_label: torch.Tensor,

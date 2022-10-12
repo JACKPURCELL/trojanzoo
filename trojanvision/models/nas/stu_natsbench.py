@@ -225,6 +225,7 @@ class STU_NATSbench(ImageModel):
             return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
         temp = 5.0
         criterion = nn.KLDivLoss(reduction='batchmean')
+        # print("KLDivLoss")
         if amp:
             with torch.cuda.amp.autocast():
                 return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
@@ -301,13 +302,22 @@ class STU_NATSbench(ImageModel):
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                 return _input, _label
 
+        def fun(variable):
+            num = ['0','1','2','3','4','5','6','7','8','9','']
+            if (variable in num):
+                return False
+            else:
+                return True
+    
         def _validate(adv_train: bool = None,
                         loader: torch.utils.data.DataLoader = None,
+                        tea_forward_fn: Callable[..., torch.Tensor] = None,
                         **kwargs) -> tuple[float, float]:
             # print(self.genotype)
-            stu_arch_list = list(filter(None, re.split('\+|\|',self.arch_str)))
-            
-            return validate_old(loader=loader, adv_train=adv_train, stu_arch_list=stu_arch_list ,**kwargs)
+            # stu_arch_list = list(filter(None, re.split('\+|\|',self.arch_str)))
+            stu_arch_tensor = self._model.arch_parameters()[0]
+            stu_arch_tensor = F.normalize(stu_arch_tensor, p=2, dim=1)
+            return validate_old(loader=loader, adv_train=adv_train, stu_arch_tensor=stu_arch_tensor ,tea_forward_fn=tea_forward_fn,**kwargs)
 
         get_data_fn = get_data
         validate_fn = _validate
