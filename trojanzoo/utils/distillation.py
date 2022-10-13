@@ -46,6 +46,7 @@ def distillation(module: nn.Module, num_classes: int,
           change_train_eval: bool = True, lr_scheduler_freq: str = 'epoch',
           backward_and_step: bool = True, 
           tea_arch_tensor = None,
+          tea_arch_list=None,
           tea_forward_fn: Callable[..., torch.Tensor] = None,
           **kwargs):
     r"""Train the model"""
@@ -69,7 +70,7 @@ def distillation(module: nn.Module, num_classes: int,
         best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
                                            forward_fn=forward_fn, loss_fn=loss_fn,
                                            writer=None, tag=tag, _epoch=start_epoch,
-                                           verbose=verbose, indent=indent, tea_arch_tensor= tea_arch_tensor,tea_forward_fn=tea_forward_fn, **kwargs)
+                                           verbose=verbose, indent=indent, tea_arch_tensor= tea_arch_tensor,tea_arch_list = tea_arch_list,tea_forward_fn=tea_forward_fn, **kwargs)
         best_acc = best_validate_result[0]
 
     params: list[nn.Parameter] = []
@@ -238,6 +239,7 @@ def distillation(module: nn.Module, num_classes: int,
                                           _epoch=_epoch + start_epoch,
                                           verbose=verbose, indent=indent,
                                           tea_arch_tensor=tea_arch_tensor,
+                                          tea_arch_list = tea_arch_list,
                                           tea_forward_fn=tea_forward_fn,
                                           **kwargs)
             cur_acc = validate_result[0]
@@ -272,6 +274,8 @@ def dis_validate(module: nn.Module, num_classes: int,
              accuracy_fn: Callable[..., list[float]] = None,
                 tea_arch_tensor=None,
               stu_arch_tensor=None,
+                        tea_arch_list=None,
+                        stu_arch_list=None,
               tea_forward_fn: Callable[..., torch.Tensor] = None,
              **kwargs) -> tuple[float, float]:
     r"""Evaluate the model.
@@ -306,16 +310,18 @@ def dis_validate(module: nn.Module, num_classes: int,
             logger.update(n=batch_size, crossentropy=float(crossentropy), kl_div=kl_div, top1=acc1, top5=acc5)
             
     
-
-    # diff = 0
-    # for i,j in zip(tea_arch_list,stu_arch_list):
-    #     if i != j:
-    #         diff += 1
-    # print("Difference: ",float(diff)/float(len(stu_arch_list)))
-    
-    L2_norm = torch.diag(torch.cdist(tea_arch_tensor, stu_arch_tensor,2))
-    print('Distance: {:.4f}'.format(torch.mean(L2_norm)))
-    print("Details: ", L2_norm)
+    if print_prefix == 'Validate Clean' or print_prefix == 'Validate':
+        diff = 0
+        for i,j in zip(tea_arch_list,stu_arch_list):
+            if i != j:
+                diff += 1
+        print("Difference: ",float(diff)/float(len(stu_arch_list)))
+        print("stu_arch_list: ",stu_arch_list)
+        print("tea_arch_list: ",tea_arch_list)
+        
+        L2_norm = torch.diag(torch.cdist(tea_arch_tensor, stu_arch_tensor,2))
+        print('Distance: {:.4f}'.format(torch.mean(L2_norm)))
+        print("Details: ", L2_norm)
     
     # normal_L2_norm = torch.diag(torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
     # reduce_L2_norm = torch.diag(torch.cdist(tea_arch_list[1], stu_arch_list[1],2))

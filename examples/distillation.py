@@ -55,7 +55,6 @@ if __name__ == '__main__':
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
     # filename = "/root/work/trojanzoo/cifar10_model.pt"
     # filename = "/home/jkl6486/trojanzoo/cifar10_model.pt"
-    # filename = "./data/model/image/cifar10/darts_supernet_150ep.pth"
     
     # tea_model.load(filename)
     
@@ -97,6 +96,9 @@ if __name__ == '__main__':
 
     
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
+    filename = "./data/model/image/cifar10/stu_nats_bench_at-free.pth"
+
+    # model.load(filename)
 
     if env['verbose']:
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
@@ -104,7 +106,7 @@ if __name__ == '__main__':
     print("=====================TEACHER VALIDATE==================")
     acc, loss = tea_model._validate()
     print("===================Start training================")
-    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_tensor=tea_arch_tensor, **trainer)
+    model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_tensor=tea_arch_tensor, tea_arch_list=tea_arch_list, **trainer)
 
     # kwargs['model_name'] = 'tea_darts'
 
