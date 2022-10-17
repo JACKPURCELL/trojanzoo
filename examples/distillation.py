@@ -25,27 +25,27 @@ if __name__ == '__main__':
     env = trojanvision.environ.create(**kwargs)
     dataset = trojanvision.datasets.create(**kwargs)
     model = trojanvision.models.create(dataset=dataset, **kwargs)
-    config = {
-        'name': 'DARTS-V1',
-        'C': 16,
-        'N': 5,
-        'max_nodes': 4,
-        'num_classes': model.num_classes,
-        'space': [
-            "none",
-            "skip_connect",
-            "nor_conv_1x1",
-            "nor_conv_3x3",
-            "avg_pool_3x3",
-        ],
-        'affine': True,
-        'track_running_stats': True,
-    }
+    # config = {
+    #     'name': 'DARTS-V1',
+    #     'C': 16,
+    #     'N': 5,
+    #     'max_nodes': 4,
+    #     'num_classes': model.num_classes,
+    #     'space': [
+    #         "none",
+    #         "skip_connect",
+    #         "nor_conv_1x1",
+    #         "nor_conv_3x3",
+    #         "avg_pool_3x3",
+    #     ],
+    #     'affine': True,
+    #     'track_running_stats': True,
+    # }
     
     
-    network = model.get_cell_based_tiny_net(config)
-    model._model.load_model(network)
-    model._model.to(env['device'])
+    # network = model.get_cell_based_tiny_net(config)
+    # model._model.load_model(network)
+    # model._model.to(env['device'])
     
     kwargs['model_name'] = 'nats_bench'
     
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
-    filename = "./data/model/image/cifar10/stu_nats_bench_at-free.pth"
+    # filename = "./data/model/image/cifar10/stu_nats_bench_at-free.pth"
 
     # model.load(filename)
 

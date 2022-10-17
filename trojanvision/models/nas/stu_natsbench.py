@@ -151,7 +151,7 @@ class STU_NATSbench(ImageModel):
                  model_index: int = 0, model_seed: int = 777, hp: int = 200,
                  dataset: ImageSet | None = None, dataset_name: str | None = None,
                  nats_path: str | None = None,
-                 search_space: str = 'tss', **kwargs):
+                 search_space: str = 'tss', arch_lr: float = 3e-4, arch_weight_decay=1e-3,**kwargs):
         try:
             # pip install nats_bench
             from nats_bench import create   # type: ignore
@@ -183,6 +183,43 @@ class STU_NATSbench(ImageModel):
         self.param_list['nats_bench'] = ['arch_str', 'model_index', 'model_seed', 'hp', 'search_space', 'nats_path']
         self._model: _NATSbench
 
+
+        config = {
+            'name': 'DARTS-V1',
+            'C': 16,
+            'N': 5,
+            'max_nodes': 4,
+            'num_classes': self.num_classes,
+            'space': [
+                "none",
+                "skip_connect",
+                "nor_conv_1x1",
+                "nor_conv_3x3",
+                "avg_pool_3x3",
+            ],
+            'affine': True,
+            'track_running_stats': True,
+        }
+        
+        
+        network = self.get_cell_based_tiny_net(config)
+        self._model.load_model(network)
+        self._model.cuda()
+    
+        for alpha in self._model.arch_parameters():
+                alpha.requires_grad_()
+        train2, train3 = self.dataset.split_dataset(
+            self.dataset.get_dataset('train'),
+            percent=0.5)
+        self.train2 = self.dataset.get_dataloader(
+            mode='train', dataset=train2)
+        self.train3 = self.dataset.get_dataloader(
+            mode='train', dataset=train3)
+        self.valid_iterator = itertools.cycle(self.train3)
+        self.arch_optimizer = torch.optim.Adam(self._model.arch_parameters(),
+                                                   lr=arch_lr, betas=(0.5, 0.999),
+                                                   weight_decay=arch_weight_decay)
+
     @property
     def arch_str(self) -> str:
         if isinstance(self._model.features.cells, DARTSCells):
@@ -210,7 +247,8 @@ class STU_NATSbench(ImageModel):
             case 'classifier' | 'partial':
                 params = self._model.classifier.parameters()
             case 'full':
-                params = itertools.chain(self._model.parameters(), self._model.arch_parameters())
+                # params = itertools.chain(self._model.parameters(), self._model.arch_parameters())
+                params = self._model.parameters()
             case _:
                 raise NotImplementedError(f'{name=}')
         return params
@@ -224,12 +262,19 @@ class STU_NATSbench(ImageModel):
             # print("validate")
             return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
         temp = 5.0
-        criterion = nn.KLDivLoss(reduction='batchmean')
-        # print("KLDivLoss")
+        criterion = nn.CrossEntropyLoss(reduction='mean')
         if amp:
             with torch.cuda.amp.autocast():
-                return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
-        return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
+                return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+        return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+
+        # criterion = nn.KLDivLoss(reduction='mean')
+        
+        # print("KLDivLoss")
+        # if amp:
+        #     with torch.cuda.amp.autocast():
+        #         return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
+        # return criterion(F.log_softmax(_output/temp,dim=1),F.softmax(_soft_label/temp,dim=1))
 
     def get_official_weights(self, model_index: int | None = None,
                              model_seed: int | None = None,
@@ -277,11 +322,25 @@ class STU_NATSbench(ImageModel):
                verbose: bool = True, indent: int = 0, tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         get_data_fn = get_data_fn or self.get_data
         validate_fn = validate_fn or self._dis_validate
-
+        loader_train = loader_train or self.train2
 
         get_data_old = get_data_fn
         validate_old = validate_fn
-
+        # def get_data(data: tuple[torch.Tensor, torch.Tensor], adv_train: bool = False,
+        #              mode: str = 'train', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
+        #     _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+        #     if mode == 'train':
+        #         data_valid = next(self.valid_iterator)
+        #         input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
+        #         self.arch_optimizer.zero_grad()
+        #         if self.arch_unrolled:# here is backward the a
+        #             self._backward_step_unrolled(_input, _label, input_valid, label_valid)
+        #         else:
+        #             loss = self.loss(input_valid, label_valid)
+        #             loss.backward(inputs=self.arch_parameters())
+        #         self.arch_optimizer.step()
+        #     return _input, _label
+        
         def get_data(data: tuple[torch.Tensor, torch.Tensor], adv_train: bool = False,
                         mode: str = 'train_STU', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
             # for test
@@ -294,10 +353,21 @@ class STU_NATSbench(ImageModel):
 
             if mode == 'train_STU' or mode == 'train_ADV_STU':
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                data_valid = next(self.valid_iterator)
+                input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
+                self.arch_optimizer.zero_grad()
+                _soft_label_valid = tea_forward_fn(input_valid,**kwargs)
+                _soft_label_valid.detach()
+                loss = self.loss(_input=input_valid, _soft_label=_soft_label_valid)
+                loss.backward(inputs=self._model.arch_parameters())
+                self.arch_optimizer.step()
                 _soft_label = tea_forward_fn(_input,**kwargs)
-                _soft_label.detach()
-                # _output = self(_input, **kwargs)
                 return _input, _label, _soft_label
+        
+                # _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                # _soft_label = tea_forward_fn(_input,**kwargs)
+                # _soft_label.detach()
+                # return _input, _label, _soft_label
             elif mode =='valid':
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                 return _input, _label
@@ -322,8 +392,9 @@ class STU_NATSbench(ImageModel):
                     return True
     
             stu_arch_list = list(filter(fun, re.split('\+|\||~',self.arch_str)))
-            stu_arch_tensor = self._model.arch_parameters()[0]
-            stu_arch_tensor = F.normalize(stu_arch_tensor, p=2, dim=1)
+            stu_arch_tensor = self._model.arch_parameters()[0].softmax(dim=-1)
+
+            # stu_arch_tensor = F.normalize(stu_arch_tensor, p=2, dim=1)
             # stu_arch_list = list(filter(None, re.split('\+|\||~',self.arch_str)))
             return validate_old(loader=loader, adv_train=adv_train, stu_arch_tensor=stu_arch_tensor ,stu_arch_list=stu_arch_list,tea_forward_fn=tea_forward_fn,**kwargs)
 
