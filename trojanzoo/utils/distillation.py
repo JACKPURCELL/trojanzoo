@@ -217,12 +217,12 @@ def distillation(module: nn.Module, num_classes: int,
         if change_train_eval:
             module.eval()
         activate_params(module, [])
-        loss, acc = (logger.meters['loss'].global_avg,
+        loss, acc = (logger.meters['kl_div'].global_avg,
                      logger.meters['top1'].global_avg)
         if writer is not None:
             from torch.utils.tensorboard import SummaryWriter
             assert isinstance(writer, SummaryWriter)
-            writer.add_scalars(main_tag='Loss/' + main_tag,
+            writer.add_scalars(main_tag='kl_div/' + main_tag,
                                tag_scalar_dict={tag: loss},
                                global_step=_epoch + start_epoch)
             writer.add_scalars(main_tag='Acc/' + main_tag,
@@ -289,7 +289,7 @@ def dis_validate(module: nn.Module, num_classes: int,
     loss_fn = loss_fn or nn.CrossEntropyLoss()
     accuracy_fn = accuracy_fn or accuracy
     logger = MetricLogger()
-    logger.create_meters(crossentropy=None, kl_div=None, top1=None, top5=None)
+    logger.create_meters(crossentropy=None, kl_div=None, top1=None, top5=None,diff=None,dis=None)
     loader_epoch = loader  
     if verbose:
         header: str = '{yellow}{0}{reset}'.format(print_prefix, **ansi)
@@ -309,20 +309,28 @@ def dis_validate(module: nn.Module, num_classes: int,
             batch_size = int(_label.size(0))
             logger.update(n=batch_size, crossentropy=float(crossentropy), kl_div=kl_div, top1=acc1, top5=acc5)
             
-    
+    acc, loss = (logger.meters['top1'].global_avg,
+                 logger.meters['kl_div'].global_avg)
+        
     if print_prefix == 'Validate Clean' or print_prefix == 'Validate':
         diff = 0
         for i,j in zip(tea_arch_list,stu_arch_list):
             if i != j:
                 diff += 1
-        print("Difference: ",float(diff)/float(len(stu_arch_list)))
+        diff = float(diff)/float(len(stu_arch_list))
+        print("Difference: ", diff)
         print("stu_arch_list: ",stu_arch_list)
         print("tea_arch_list: ",tea_arch_list)
         
         L2_norm = torch.diag(torch.cdist(tea_arch_tensor, stu_arch_tensor,2))
         print('Distance: {:.4f}'.format(torch.mean(L2_norm)))
         print("Details: ", L2_norm)
-    
+        logger.update(diff=diff,dis='{:.4f}'.format(torch.mean(L2_norm)))
+        acc, loss, diff, dis = (logger.meters['top1'].global_avg,
+                 logger.meters['kl_div'].global_avg,
+                 logger.meters['diff'].global_avg,
+                 logger.meters['dis'].global_avg)
+
     # normal_L2_norm = torch.diag(torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
     # reduce_L2_norm = torch.diag(torch.cdist(tea_arch_list[1], stu_arch_list[1],2))
 
@@ -333,15 +341,19 @@ def dis_validate(module: nn.Module, num_classes: int,
     # print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
     # print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
 
-    acc, loss = (logger.meters['top1'].global_avg,
-                 logger.meters['loss'].global_avg)
+    
     if writer is not None and _epoch is not None and main_tag:
         from torch.utils.tensorboard import SummaryWriter
         assert isinstance(writer, SummaryWriter)
         writer.add_scalars(main_tag='Acc/' + main_tag,
                            tag_scalar_dict={tag: acc}, global_step=_epoch)
-        writer.add_scalars(main_tag='Loss/' + main_tag,
+        writer.add_scalars(main_tag='kl_div/' + main_tag,
                            tag_scalar_dict={tag: loss}, global_step=_epoch)
+        if print_prefix == 'Validate Clean' or print_prefix == 'Validate':
+            writer.add_scalars(main_tag='diff/' + main_tag,
+                        tag_scalar_dict={tag: diff}, global_step=_epoch)
+            writer.add_scalars(main_tag='dis/' + main_tag,
+                tag_scalar_dict={tag: dis}, global_step=_epoch)
     return acc, loss
 
 

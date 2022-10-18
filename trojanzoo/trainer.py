@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import torch
 from trojanzoo.models import Model
 from trojanzoo.configs import config
 from trojanzoo.environ import env
@@ -125,7 +126,6 @@ class Trainer(BasicObject):
                            '(default: 10)')
         group.add_argument('--save', action='store_true',
                            help='save training results')
-
         group.add_argument('--tensorboard', action='store_true',
                            help='save training logging for tensorboard')
         group.add_argument('--log_dir',
