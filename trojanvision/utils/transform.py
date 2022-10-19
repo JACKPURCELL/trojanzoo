@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
@@ -9,7 +10,7 @@ from torch.nn.functional import one_hot
 import math
 
 
-__all__ = ['RandomMixup', 'RandomCutmix', 'Cutout',
+__all__ = ['RandomMixup', 'RandomCutmix', 'Cutout','FullRandomMixup'
            'get_transform_bit',
            'get_transform_imagenet',
            'get_transform_cifar']
@@ -96,7 +97,93 @@ class RandomMixup(nn.Module):
         s += ")"
         return s.format(**self.__dict__)
 
+class FullRandomMixup(nn.Module):
+    """Randomly apply Mixup to the provided batch and targets.
+    The class implements the data augmentations as described in the paper
+    `"mixup: Beyond Empirical Risk Minimization" <https://arxiv.org/abs/1710.09412>`_.
+    Args:
+        num_classes (int): number of classes used for one-hot encoding.
+        p (float): probability of the batch being transformed. Default value is 0.5.
+        alpha (float): hyperparameter of the Beta distribution used for mixup.
+            Default value is 1.0.
+        inplace (bool): boolean to make this transform inplace. Default set to False.
+    """  # noqa: E501
 
+    def __init__(self, num_classes: int,  p: float = 1.0,inplace: bool = False) -> None:
+        super().__init__()
+        assert num_classes > 0, ("Please provide a valid positive value"
+                                 " for the num_classes.")
+
+        self.p = p
+        self.num_classes = num_classes
+        self.inplace = inplace
+        
+    def forward(self, batch: torch.Tensor,
+                target: torch.Tensor
+                ) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Args:
+            batch (torch.Tensor): Float tensor of size (B, C, H, W)
+            target (torch.Tensor): Integer tensor of size (B, )
+        Returns:
+            torch.Tensor: Randomly transformed batch.
+        """
+        ori_batch = batch.clone()
+        ori_target = target.clone()
+        if batch.ndim != 4:
+            raise ValueError(f"Batch ndim should be 4. Got {batch.ndim}")
+        if target.ndim != 1:
+            raise ValueError(f"Target ndim should be 1. Got {target.ndim}")
+        if not batch.is_floating_point():
+            raise TypeError(
+                f"Batch dtype should be a float tensor. Got {batch.dtype}.")
+        if target.dtype != torch.int64:
+            raise TypeError(
+                f"Target dtype should be torch.int64. Got {target.dtype}")
+
+        if not self.inplace:
+            batch = batch.clone()
+            target = target.clone()
+
+        if target.ndim == 1:
+            target = one_hot(target, num_classes=self.num_classes)
+            target = target.to(dtype=batch.dtype)
+
+        if torch.rand(1).item() >= self.p:
+            return batch, target
+
+        # It's faster to roll the batch by one
+        # instead of shuffling it to create image pairs
+        batch_rolled = batch.roll(1, 0)
+        target_rolled = target.roll(1, 0)
+        
+        full_batch = batch
+        full_target = target
+
+        
+        for alpha in np.arange(0.1, 1.0, 0.1):
+            # Implemented as on mixup paper, page 3.
+            lambda_param = float(torch._sample_dirichlet(
+                torch.tensor([alpha, alpha]))[0])
+            batch_rolled.mul_(1.0 - lambda_param)
+            batch.mul_(lambda_param).add_(batch_rolled)
+
+            target_rolled.mul_(1.0 - lambda_param)
+            target.mul_(lambda_param).add_(target_rolled)
+            full_batch = torch.cat([full_batch,batch],0)
+            full_target = torch.cat([full_target,target],0)
+            
+        return full_batch, full_target,ori_batch,ori_target
+    
+    def __repr__(self) -> str:
+        s = self.__class__.__name__ + "("
+        s += "num_classes={num_classes}"
+        s += ", p={p}"
+        s += ", alpha={alpha}"
+        s += ", inplace={inplace}"
+        s += ")"
+        return s.format(**self.__dict__)
+    
 class RandomCutmix(nn.Module):
     """Randomly apply Cutmix to the provided batch and targets.
     The class implements the data augmentations as described in the paper

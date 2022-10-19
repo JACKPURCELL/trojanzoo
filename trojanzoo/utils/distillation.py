@@ -151,7 +151,7 @@ def distillation(module: nn.Module, num_classes: int,
 
 
             _input, _label, _soft_label = get_data_fn(data, mode=mode)
-            
+
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove

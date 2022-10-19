@@ -2,7 +2,7 @@
 
 from trojanzoo.datasets import Dataset
 from trojanvision.environ import env
-from trojanvision.utils.transform import (get_transform_bit,
+from trojanvision.utils.transform import (FullRandomMixup, get_transform_bit,
                                           get_transform_imagenet,
                                           get_transform_cifar,
                                           RandomMixup,
@@ -105,6 +105,7 @@ class ImageSet(Dataset):
         group.add_argument('--auto_augment', action='store_true',
                            help='use auto augment')
         group.add_argument('--mixup', action='store_true', help='use mixup')
+        group.add_argument('--full_mixup', action='store_true', help='use mixup')
         group.add_argument('--mixup_alpha', type=float, help='mixup alpha (default: 0.0)')
         group.add_argument('--cutmix', action='store_true', help='use cutmix')
         group.add_argument('--cutmix_alpha', type=float, help='cutmix alpha (default: 0.0)')
@@ -114,7 +115,7 @@ class ImageSet(Dataset):
 
     def __init__(self, norm_par: dict[str, list[float]] = None,
                  normalize: bool = False, transform: str = None,
-                 auto_augment: bool = False,
+                 auto_augment: bool = False, full_mixup: bool = False,
                  mixup: bool = False, mixup_alpha: float = 0.0,
                  cutmix: bool = False, cutmix_alpha: float = 0.0,
                  cutout: bool = False, cutout_length: int = None,
@@ -124,6 +125,7 @@ class ImageSet(Dataset):
         self.transform = transform
         self.auto_augment = auto_augment
         self.mixup = mixup
+        self.full_mixup = full_mixup
         self.mixup_alpha = mixup_alpha
         self.cutmix = cutmix
         self.cutmix_alpha = cutmix_alpha
@@ -131,6 +133,8 @@ class ImageSet(Dataset):
         self.cutout_length = cutout_length
 
         mixup_transforms = []
+        if full_mixup:
+            mixup_transforms.append(FullRandomMixup(self.num_classes, p=1.0))
         if mixup:
             mixup_transforms.append(RandomMixup(self.num_classes, p=1.0, alpha=mixup_alpha))
         if cutmix:
@@ -149,7 +153,8 @@ class ImageSet(Dataset):
                                        'auto_augment']
         if cutout:
             self.param_list['imageset'].append('cutout_length')
-
+        # if full_mixup:
+        #     self.param_list['imageset'].append('mixup_alpha')
         if mixup:
             self.param_list['imageset'].append('mixup_alpha')
         if cutmix:
@@ -210,7 +215,7 @@ class ImageSet(Dataset):
                 Label is transformed to ``torch.LongTensor``.
         """
         return (data[0].to(env['device'], non_blocking=True),
-                data[1].to(env['device'], dtype=torch.long, non_blocking=True))
+                data[1].to(env['device'], non_blocking=True))
 
     def make_folder(self, img_type: str = '.png', **kwargs):
         r"""Save the dataset to ``self.folder_path``

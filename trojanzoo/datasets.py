@@ -135,7 +135,7 @@ class Dataset(ABC, BasicObject):
         self.valid_batch_size = valid_batch_size
         self.split_ratio = split_ratio
         self.num_workers = num_workers
-        self.collate_fn: Callable[[Iterable[torch.Tensor]], Iterable[torch.Tensor]] = None
+        self.collate_fn: Callable[[Iterable[torch.Tensor]], Iterable[torch.Tensor]]
         # ----------------------------------------------- #
 
         if folder_path is not None:

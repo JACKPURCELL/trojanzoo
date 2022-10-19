@@ -3,8 +3,11 @@
 r"""--nats_path /data/rbp5354/nats/NATS-tss-v1_0-3ffb9-full"""  # noqa: E501
 
 import itertools
+import random
 import re
 from typing import Generator, Iterator, Mapping, TYPE_CHECKING
+
+import numpy as np
 
 from trojanvision.datasets.imageset import ImageSet
 from trojanvision.models.imagemodel import _ImageModel, ImageModel
@@ -340,8 +343,24 @@ class STU_NATSbench(ImageModel):
         #             loss.backward(inputs=self.arch_parameters())
         #         self.arch_optimizer.step()
         #     return _input, _label
-        
-        def get_data(data: tuple[torch.Tensor, torch.Tensor], adv_train: bool = False,
+        # def mix_up(data, targets):
+            
+        #     for img, target in  zip(data,targets):
+            
+        #         mixup_idx = random.randint(0, len(data)-1)
+        #         mixup_label = torch.zeros(10)
+        #         target[targets[mixup_idx]] = 1.
+            
+
+        #         # Select a random number from the given beta distribution
+        #         # Mixup the images accordingly
+        #         for alpha in np.arange(0, 1.1, 0.1):
+        #             lam = np.random.beta(alpha, alpha)
+        #             image = lam * image + (1 - lam) * mixup_image
+        #             label = lam * label + (1 - lam) * mixup_label
+                    
+        #     return img, target
+        def get_data(data: tuple[torch.Tensor, torch.Tensor,torch.Tensor, torch.Tensor], adv_train: bool = False,
                         mode: str = 'train_STU', **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
             # for test
             # if self.count > 0 and mode != 'valid':
@@ -353,8 +372,12 @@ class STU_NATSbench(ImageModel):
 
             if mode == 'train_STU' or mode == 'train_ADV_STU':
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                # print('train_STU',_input.shape)
+                
                 data_valid = next(self.valid_iterator)
-                input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
+                input_valid, label_valid = get_data_old(data_valid[0:2], adv_train=adv_train, **kwargs)
+                # print('train_STUinput_valid',input_valid.shape)
+                
                 self.arch_optimizer.zero_grad()
                 _soft_label_valid = tea_forward_fn(input_valid,**kwargs)
                 _soft_label_valid.detach()
@@ -369,7 +392,9 @@ class STU_NATSbench(ImageModel):
                 # _soft_label.detach()
                 # return _input, _label, _soft_label
             elif mode =='valid':
-                _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                _input, _label = get_data_old(data[2:4], adv_train=adv_train, **kwargs)
+                # print('valid',_input.shape)
+                
                 return _input, _label
 
         def fun(variable):
