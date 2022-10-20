@@ -137,6 +137,7 @@ class ImageSet(Dataset):
             mixup_transforms.append(FullRandomMixup(self.num_classes, p=1.0))
         if mixup:
             mixup_transforms.append(RandomMixup(self.num_classes, p=1.0, alpha=mixup_alpha))
+            print("mixup_alpha",mixup_alpha)
         if cutmix:
             mixup_transforms.append(RandomCutmix(self.num_classes, p=1.0, alpha=cutmix_alpha))
         if len(mixup_transforms):

@@ -104,7 +104,7 @@ if __name__ == '__main__':
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
         trojanvision.summary(env=env, dataset=dataset, model=tea_model)
     print("=====================TEACHER VALIDATE==================")
-    # acc, loss = tea_model._validate()
+    acc, loss = tea_model._validate()
     print("===================Start training================")
     model._distillation(tea_forward_fn=tea_model.__call__, tea_arch_tensor=tea_arch_tensor, tea_arch_list=tea_arch_list, **trainer)
 

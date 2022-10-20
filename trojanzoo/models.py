@@ -276,6 +276,8 @@ class Model(BasicObject):
                            help='randomized smoothing sampling number '
                            '(default: 100)')
         group.add_argument('--model_dir', help='directory to store pretrained models')
+        # group.add_argument('--tensorboard', action='store_true',
+        #                    help='save training logging for tensorboard')
         return group
 
     def __init__(self, name: str = 'model', suffix: str = None,
@@ -1155,8 +1157,7 @@ class Model(BasicObject):
                         tea_arch_tensor=tea_arch_tensor, 
                         stu_arch_tensor=stu_arch_tensor,
                                                 tea_arch_list=tea_arch_list,
-                        stu_arch_list=stu_arch_list,
-                        **kwargs)
+                        stu_arch_list=stu_arch_list,**kwargs)
 
     def _compare(self, peer: nn.Module = None,
                  loader: torch.utils.data.DataLoader = None,

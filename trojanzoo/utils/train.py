@@ -206,7 +206,17 @@ def train(module: nn.Module, num_classes: int,
     module.zero_grad()
     return best_validate_result
 
+def get_target_prob(_input,target,_output):
+    softmax=nn.Softmax(dim=1)
+    match target:
+        case int():
+            target = [target] * len(_input)
+        case list():
+            target = torch.tensor(target, device=_input.device) 
+    return softmax(_output).gather(dim=1, index=target.unsqueeze(1)).flatten()
+    
 
+    
 def validate(module: nn.Module, num_classes: int,
              loader: torch.utils.data.DataLoader,
              print_prefix: str = 'Validate', indent: int = 0,
@@ -230,7 +240,7 @@ def validate(module: nn.Module, num_classes: int,
     loss_fn = loss_fn or nn.CrossEntropyLoss()
     accuracy_fn = accuracy_fn or accuracy
     logger = MetricLogger()
-    logger.create_meters(loss=None, top1=None, top5=None)
+    logger.create_meters(loss=None, top1=None, top5=None,conf=None)
     loader_epoch = loader
     if verbose:
         header: str = '{yellow}{0}{reset}'.format(print_prefix, **ansi)
@@ -239,16 +249,25 @@ def validate(module: nn.Module, num_classes: int,
                                         tqdm_header='Batch',
                                         indent=indent)
     for data in loader_epoch:
-        _input, _label = get_data_fn(data, mode='valid', **kwargs)
+                # return batch, target,ori_batch,ori_target
+        # _input, _label = get_data_fn(data, mode='valid', **kwargs)
+        _input = data[0].to(env['device'], non_blocking=True)
+        _label=data[1].to(env['device'], non_blocking=True)
+        ori_batch=data[2].to(env['device'], non_blocking=True)
+        ori_target=data[3].to(env['device'], non_blocking=True)
         with torch.no_grad():
             _output = forward_fn(_input)
             loss = float(loss_fn(_input, _label, _output=_output, **kwargs))
+            conf = float(get_target_prob(_input, ori_target,_output).mean())
+            
             acc1, acc5 = accuracy_fn(
-                _output, _label, num_classes=num_classes, topk=(1, 5))
+                _output, ori_target, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
-            logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5)
-    acc, loss = (logger.meters['top1'].global_avg,
-                 logger.meters['loss'].global_avg)
+            logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5,conf=conf)
+    acc, loss,conf = (logger.meters['top1'].global_avg,
+                 logger.meters['loss'].global_avg,
+                 logger.meters['conf'].global_avg)
+    print(conf)
     if writer is not None and _epoch is not None and main_tag:
         from torch.utils.tensorboard import SummaryWriter
         assert isinstance(writer, SummaryWriter)
@@ -256,6 +275,8 @@ def validate(module: nn.Module, num_classes: int,
                            tag_scalar_dict={tag: acc}, global_step=_epoch)
         writer.add_scalars(main_tag='Loss/' + main_tag,
                            tag_scalar_dict={tag: loss}, global_step=_epoch)
+        writer.add_scalars(main_tag='conf/' + main_tag,
+                    tag_scalar_dict={tag: conf}, global_step=_epoch)
     return acc, loss
 
 
