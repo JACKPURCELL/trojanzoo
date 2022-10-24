@@ -163,8 +163,9 @@ class FullRandomMixup(nn.Module):
         
         for alpha in np.arange(0.1, 1.0, 0.1):
             # Implemented as on mixup paper, page 3.
-            lambda_param = float(torch._sample_dirichlet(
-                torch.tensor([alpha, alpha]))[0])
+            # lambda_param = float(torch._sample_dirichlet(
+            #     torch.tensor([alpha, alpha]))[0])
+            lambda_param = alpha
             batch_rolled.mul_(1.0 - lambda_param)
             batch.mul_(lambda_param).add_(batch_rolled)
 
