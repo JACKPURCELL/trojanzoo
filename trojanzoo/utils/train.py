@@ -277,7 +277,7 @@ def validate(module: nn.Module, num_classes: int,
                            tag_scalar_dict={tag: loss}, global_step=_epoch)
         writer.add_scalars(main_tag='conf/' + main_tag,
                     tag_scalar_dict={tag: conf}, global_step=_epoch)
-    return acc, loss
+    return acc, loss, conf
 
 
 @torch.no_grad()
