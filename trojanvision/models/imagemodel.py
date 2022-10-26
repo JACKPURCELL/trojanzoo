@@ -206,7 +206,7 @@ class ImageModel(Model):
                  model: type[_ImageModel] | _ImageModel = _ImageModel,
                  dataset: ImageSet = None, data_shape: list[int] = None,
                  adv_train: str = None, adv_train_random_init: bool = False, adv_train_eval_random_init: bool = None,
-                 adv_train_iter: int = 7, adv_train_alpha: float = 2 / 255, adv_train_eps: float = 8 / 255,
+                 adv_train_iter: int = 1, adv_train_alpha: float = 8 / 255, adv_train_eps: float = 8 / 255,
                  adv_train_eval_iter: int = None, adv_train_eval_alpha: float = None, adv_train_eval_eps: float = None,
                  adv_train_trades_beta: float = 6.0,
                  norm_layer: str = 'bn', sgm: bool = False, sgm_gamma: float = 1.0,

@@ -28,7 +28,7 @@ class AdvTrain(BackdoorDefense):
         group.add_argument('--pgd_iter', type=int)
         return group
 
-    def __init__(self, pgd_alpha: float = 2.0 / 255, pgd_eps: float = 8.0 / 255, pgd_iter: int = 7, **kwargs):
+    def __init__(self, pgd_alpha: float = 8.0 / 255, pgd_eps: float = 8.0 / 255, pgd_iter: int = 1, **kwargs):
         super().__init__(**kwargs)
         self.param_list['adv_train'] = ['pgd_alpha', 'pgd_eps', 'pgd_iter']
         self.pgd_alpha = pgd_alpha

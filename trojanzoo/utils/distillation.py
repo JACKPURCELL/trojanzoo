@@ -128,10 +128,10 @@ def distillation(module: nn.Module, num_classes: int,
 #----------------------------------------------------------------
 #-------------------------new---------------------------------------
 
-        if _epoch < 200:
+        if _epoch < 30:
             mode = 'train_STU' #kl loss / return raw data
             print(_epoch,mode)
-        elif _epoch >= 200 :
+        elif _epoch >= 30 :
             mode = 'train_ADV_STU'  #kl loss / return adv data
             print(_epoch,mode)
 
