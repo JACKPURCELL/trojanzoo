@@ -48,10 +48,11 @@ if __name__ == '__main__':
     # model._model.to(env['device'])
     conf_list = []
     index_list = []
-
+    variance_list=[]
+    variance_index_list=[]
     
     kwargs['model_name'] = 'nats_bench'
-    for index in range(2000,3000,10):
+    for index in range(3000,4000,10):
         kwargs['model_index'] = index
         for alpha in np.arange(0.1, 1.1, 0.1):
             kwargs['mixup_alpha'] = alpha
@@ -60,20 +61,35 @@ if __name__ == '__main__':
             tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
             if env['verbose']:
                 trojanvision.summary(env=env, dataset=dataset, model=tea_model)
-            acc, loss, conf = tea_model._validate()
+            acc, loss, conf, variance = tea_model._validate()
             conf_list.append(conf)
+            variance_list.append(variance)
         index_list.append(conf_list)
+        variance_index_list.append(variance_list)
         conf_list = []
+        variance_list = []
         # print(conf_list)
         # for i in range(len(conf_list)):
         #     print(conf_list[i])
 
+    f = open('./index_list.txt', 'w')
+    p = open('./variance_index_list.txt', 'w')
+
+    
     for i in range(len(index_list)):
         for j in range(len(index_list[i])):
+            f.write(str(index_list[i][j]))
+            f.write("\n")
             print(index_list[i][j])
-        print("fenge")
-
-        
+        print("\n")
+        f.write("\n")
+        for k in range(len(variance_index_list[i])):
+            p.write(str(variance_index_list[i][k]))
+            p.write("\n")
+            print(variance_index_list[i][k])
+        p.write("\n")
+        print("\n")
+    f.close()    
     # filename = "/root/work/trojanzoo/cifar10_model.pt"
     # filename = "/home/jkl6486/trojanzoo/cifar10_model.pt"
     

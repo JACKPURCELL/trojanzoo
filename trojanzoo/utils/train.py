@@ -240,7 +240,7 @@ def validate(module: nn.Module, num_classes: int,
     loss_fn = loss_fn or nn.CrossEntropyLoss()
     accuracy_fn = accuracy_fn or accuracy
     logger = MetricLogger()
-    logger.create_meters(loss=None, top1=None, top5=None,conf=None)
+    logger.create_meters(loss=None, top1=None, top5=None,conf=None,variance=None)
     loader_epoch = loader
     if verbose:
         header: str = '{yellow}{0}{reset}'.format(print_prefix, **ansi)
@@ -258,16 +258,19 @@ def validate(module: nn.Module, num_classes: int,
         with torch.no_grad():
             _output = forward_fn(_input)
             loss = float(loss_fn(_input, _label, _output=_output, **kwargs))
+            variance = torch.var(_output, unbiased=False,dim=1)
+            variance=variance.mean()
             conf = float(get_target_prob(_input, ori_target,_output).mean())
             
             acc1, acc5 = accuracy_fn(
                 _output, ori_target, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
-            logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5,conf=conf)
-    acc, loss,conf = (logger.meters['top1'].global_avg,
+            logger.update(n=batch_size, loss=float(loss), top1=acc1, top5=acc5,conf=conf,variance=variance)
+    acc, loss,conf,variance = (logger.meters['top1'].global_avg,
                  logger.meters['loss'].global_avg,
-                 logger.meters['conf'].global_avg)
-    print(conf)
+                 logger.meters['conf'].global_avg,
+                 logger.meters['variance'].global_avg)
+    print(conf,variance)
     if writer is not None and _epoch is not None and main_tag:
         from torch.utils.tensorboard import SummaryWriter
         assert isinstance(writer, SummaryWriter)
@@ -277,7 +280,9 @@ def validate(module: nn.Module, num_classes: int,
                            tag_scalar_dict={tag: loss}, global_step=_epoch)
         writer.add_scalars(main_tag='conf/' + main_tag,
                     tag_scalar_dict={tag: conf}, global_step=_epoch)
-    return acc, loss, conf
+        writer.add_scalars(main_tag='variance/' + main_tag,
+                    tag_scalar_dict={tag: variance}, global_step=_epoch)
+    return acc, loss, conf, variance
 
 
 @torch.no_grad()
