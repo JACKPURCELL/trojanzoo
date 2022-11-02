@@ -248,6 +248,8 @@ def validate(module: nn.Module, num_classes: int,
         loader_epoch = logger.log_every(loader, header=header,
                                         tqdm_header='Batch',
                                         indent=indent)
+    output_list = []
+    flag = 0
     for data in loader_epoch:
                 # return batch, target,ori_batch,ori_target
         # _input, _label = get_data_fn(data, mode='valid', **kwargs)
@@ -260,8 +262,13 @@ def validate(module: nn.Module, num_classes: int,
             loss = float(loss_fn(_input, _label, _output=_output, **kwargs))
             variance = torch.var(_output, unbiased=False,dim=1)
             variance=variance.mean()
-            conf = float(get_target_prob(_input, ori_target,_output).mean())
+            if flag == 0:
+                output_list = _output
+                flag = 1
+            else:
+                output_list = torch.cat((output_list,_output))
             
+            conf = float(get_target_prob(_input, ori_target,_output).mean())
             acc1, acc5 = accuracy_fn(
                 _output, ori_target, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
@@ -282,7 +289,7 @@ def validate(module: nn.Module, num_classes: int,
                     tag_scalar_dict={tag: conf}, global_step=_epoch)
         writer.add_scalars(main_tag='variance/' + main_tag,
                     tag_scalar_dict={tag: variance}, global_step=_epoch)
-    return acc, loss, conf, variance
+    return acc, loss, conf, variance, output_list
 
 
 @torch.no_grad()

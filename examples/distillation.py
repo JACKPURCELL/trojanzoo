@@ -12,6 +12,8 @@ import argparse
 import torch
 from time import time
 
+from trojanzoo.utils.output import output_iter
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     trojanvision.environ.add_argument(parser)
@@ -23,6 +25,7 @@ if __name__ == '__main__':
     
     kwargs = parser.parse_args().__dict__
     env = trojanvision.environ.create(**kwargs)
+    
     
     # model = trojanvision.models.create(dataset=dataset, **kwargs)
     # config = {
@@ -50,46 +53,79 @@ if __name__ == '__main__':
     index_list = []
     variance_list=[]
     variance_index_list=[]
+    output_list = []
+    output_var_list = []
+
     
     kwargs['model_name'] = 'nats_bench'
-    for index in range(3000,4000,10):
-        kwargs['model_index'] = index
+
+    with open('arch_var_list.csv','ab') as f , open('./seed_var_list.csv', 'w') as p, open('./acc.csv', 'w') as a:
+        
         for alpha in np.arange(0.1, 1.1, 0.1):
             kwargs['mixup_alpha'] = alpha
             print("alpha: ", alpha)
+            flag = 0
             dataset = trojanvision.datasets.create(**kwargs)
-            tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
-            if env['verbose']:
-                trojanvision.summary(env=env, dataset=dataset, model=tea_model)
-            acc, loss, conf, variance = tea_model._validate()
-            conf_list.append(conf)
-            variance_list.append(variance)
-        index_list.append(conf_list)
-        variance_index_list.append(variance_list)
-        conf_list = []
-        variance_list = []
+            
+            for seed,i in zip([777,888],range(2)):
+                kwargs['model_seed'] = seed
+                for index,j in zip([3010,3030,3050,3640,3650,3690,3700,3710,3830,3900],range(10)):
+                    kwargs['model_index'] = index
+                    tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
+                    if env['verbose']:
+                        trojanvision.summary(env=env, dataset=dataset, model=tea_model)
+                    acc, loss, conf, variance, output_tensor = tea_model._validate()#output data_size*10
+                    print("acc",acc)
+                    if flag == 0:
+                        abc = torch.zeros([output_tensor.shape[0],2,10,10])#dim batch,seed,arch,class
+                        flag = 1
+                    abc[:,i,j,:] = output_tensor
+                    
+            arch_var = torch.var(abc,dim=1)#dim batch,arch,class
+            arch_var = torch.mean(arch_var,dim=[0,2])
+            seed_var = torch.var(abc,dim=2)
+            seed_var = torch.mean(seed_var,dim=[0,2])
+            np.savetxt(f, arch_var.detach().numpy(), delimiter=",") 
+            np.savetxt(p, seed_var.detach().numpy(), delimiter=",") 
+
+
+
+        f.close()    
+        p.close()    
+
+
+    
+    #     conf_list.append(conf)
+    #     variance_list.append(variance)
+    # output_list
+            
+            
+    # index_list.append(conf_list)
+    # variance_index_list.append(variance_list)
+    # conf_list = []
+    # variance_list = []
         # print(conf_list)
         # for i in range(len(conf_list)):
         #     print(conf_list[i])
 
-    f = open('./index_list.txt', 'w')
-    p = open('./variance_index_list.txt', 'w')
+    # f = open('./index_list.txt', 'w')
+    # p = open('./variance_index_list.txt', 'w')
 
     
-    for i in range(len(index_list)):
-        for j in range(len(index_list[i])):
-            f.write(str(index_list[i][j]))
-            f.write("\n")
-            print(index_list[i][j])
-        print("\n")
-        f.write("\n")
-        for k in range(len(variance_index_list[i])):
-            p.write(str(variance_index_list[i][k]))
-            p.write("\n")
-            print(variance_index_list[i][k])
-        p.write("\n")
-        print("\n")
-    f.close()    
+    # for i in range(len(index_list)):
+    #     for j in range(len(index_list[i])):
+    #         f.write(str(index_list[i][j]))
+    #         f.write("\n")
+    #         print(index_list[i][j])
+    #     print("\n")
+    #     f.write("\n")
+    #     for k in range(len(variance_index_list[i])):
+    #         p.write(str(variance_index_list[i][k]))
+    #         p.write("\n")
+    #         print(variance_index_list[i][k])
+    #     p.write("\n")
+    #     print("\n")
+    # f.close()    
     # filename = "/root/work/trojanzoo/cifar10_model.pt"
     # filename = "/home/jkl6486/trojanzoo/cifar10_model.pt"
     
