@@ -616,32 +616,38 @@ class ImageModel(Model):
 
                 if self.adv_train == 'free':
                     #TODO:need to verify _soft_label
+                    _ori_input = _input
                     noise = self.pgd.init_noise(_input.shape, pgd_eps=self.adv_train_eps,
                                                 random_init=self.adv_train_random_init,
                                                 device=_input.device)
                     adv_x = add_noise(x=_input, noise=noise, universal=self.pgd.universal,
                                       clip_min=self.pgd.clip_min, clip_max=self.pgd.clip_max)
-                    noise.data = self.pgd.valid_noise(adv_x, _input)
+                    noise.data = self.pgd.valid_noise(adv_x, _input)           
                     for m in range(self.adv_train_iter):
-                        loss = loss_fn(_input=adv_x, _soft_label=_soft_label)
-                        if amp:
-                            scaler.scale(loss).backward()
-                            scaler.step(optimizer)
-                            scaler.update()
-                        else:
-                            loss.backward()
-                            optimizer.step()
-                        optimizer.zero_grad()
-                        self.zero_grad()
+                        # loss = loss_fn(_input=adv_x, _soft_label=_soft_label)
+                        # if amp:
+                        #     scaler.scale(loss).backward()
+                        #     scaler.step(optimizer)
+                        #     scaler.update()
+                        # else:
+                        #     loss.backward()
+                        #     optimizer.step()
+                        # optimizer.zero_grad()
+                        # self.zero_grad()
                         # self.eval()
                         adv_x, _ = self.pgd.optimize(_input=_input, noise=noise, target=_soft_label, iteration=1,
                                                      pgd_alpha=self.adv_train_alpha, pgd_eps=self.adv_train_eps)
                         # self.train()
-                        _adv_soft_label = tea_forward_fn(adv_x, **kwargs)
-                        loss = loss_fn(_input=adv_x, _soft_label=_adv_soft_label)
+                        # _adv_soft_label = tea_forward_fn(adv_x, **kwargs)
+                        # loss = loss_fn(_input=adv_x, _soft_label=_adv_soft_label)
                 else:
                     loss = self.adv_loss(_input=_input, _label=_label, _soft_label=_soft_label, loss_fn=loss_fn,tea_forward_fn=tea_forward_fn,**kwargs)
-
+                
+                length = _ori_input.shape[0]
+                _mix_input = torch.cat((adv_x[:int(length*0.1)],_ori_input[int(length*0.1):int(length*0.9)], adv_x[int(length*0.9):]),0)
+                _mix_soft_label = tea_forward_fn(_mix_input, **kwargs)
+                loss = loss_fn(_input=_mix_input, _soft_label=_mix_soft_label)
+                
                 if amp:
                     scaler.scale(loss).backward()
                 else:

@@ -3,14 +3,14 @@ default_model:
   mnist: net
 
 adv_train_iter:
-  default: 1
+  default: 7
 
 adv_train_alpha:
-  default: 0.031372549 # 8/255
+  default: 0.0392156862745098 # 2/255*5
   mnist: 0.1
 
 adv_train_eps:
-  default: 0.031372549 # 8/255
+  default: 0.156862745098039 # 8/255*5
   mnist: 0.3
 
 adv_train_trades_beta:
