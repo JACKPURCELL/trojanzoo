@@ -353,16 +353,26 @@ class STU_NATSbench(ImageModel):
 
             if mode == 'train_STU' or mode == 'train_ADV_STU':
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
+                _noise_input = torch.rand_like(_input)
+                length = _noise_input.shape[0]
+                _mix_input = torch.cat((_noise_input[:int(length*0.1)],_input[int(length*0.1):int(length*0.9)], _noise_input[int(length*0.9):]),0)
+                
                 data_valid = next(self.valid_iterator)
+                
                 input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
+                _noise_input = torch.rand_like(_input)
+                length = _noise_input.shape[0]
+                _mix_input_valid = torch.cat((_noise_input[:int(length*0.1)],input_valid[int(length*0.1):int(length*0.9)], _noise_input[int(length*0.9):]),0)
+                
                 self.arch_optimizer.zero_grad()
-                _soft_label_valid = tea_forward_fn(input_valid,**kwargs)
+                
+                _soft_label_valid = tea_forward_fn(_mix_input_valid,**kwargs)
                 _soft_label_valid.detach()
-                loss = self.loss(_input=input_valid, _soft_label=_soft_label_valid)
+                loss = self.loss(_input=_mix_input_valid, _soft_label=_soft_label_valid)
                 loss.backward(inputs=self._model.arch_parameters())
                 self.arch_optimizer.step()
-                _soft_label = tea_forward_fn(_input,**kwargs)
-                return _input, _label, _soft_label
+                _soft_label = tea_forward_fn(_mix_input,**kwargs)
+                return _mix_input, _label, _soft_label
         
                 # _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                 # _soft_label = tea_forward_fn(_input,**kwargs)
