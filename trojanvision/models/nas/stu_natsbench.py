@@ -168,6 +168,7 @@ class STU_NATSbench(ImageModel):
         assert dataset_name is not None
         dataset_name = dataset_name.replace('imagenet16', 'ImageNet16')
         self.dataset_name = 'cifar10-valid'
+        dataset_name = 'cifar10-valid'
 
 
         self.model_index = model_index
