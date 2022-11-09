@@ -80,6 +80,7 @@ if __name__ == '__main__':
         else:
             return True
     tea_arch_list = list(filter(fun, re.split('\+|\||~',tea_model.arch_str)))
+    print(tea_arch_list)
     # ['nor_conv_1x1', 'none', 'nor_conv_1x1', 'skip_connect', 'skip_connect', 'nor_conv_3x3']
     op_list =  [
         "none",
