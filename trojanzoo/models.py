@@ -1036,7 +1036,6 @@ class Model(BasicObject):
                writer=None, main_tag: str = 'train', tag: str = '',
                accuracy_fn: Callable[..., list[float]] = None,
                verbose: bool = True, indent: int = 0,
-               tea_arch_tensor = None, tea_arch_list=None,
                tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         r"""Train the model"""
         loader_train = loader_train if loader_train is not None \
@@ -1071,8 +1070,7 @@ class Model(BasicObject):
                      folder_path=folder_path, suffix=suffix,
                      writer=writer, main_tag=main_tag, tag=tag,
                      accuracy_fn=accuracy_fn,
-                     verbose=verbose, indent=indent, tea_arch_tensor=tea_arch_tensor,
-                     tea_arch_list=tea_arch_list,
+                     verbose=verbose, indent=indent,
                      tea_forward_fn=tea_forward_fn, **kwargs)
 
 
@@ -1086,9 +1084,6 @@ class Model(BasicObject):
                   writer=None, main_tag: str = 'valid',
                   tag: str = '', _epoch: int = None,
                   accuracy_fn: Callable[..., list[float]] = None,
-                  tea_arch_tensor=None,
-                  stu_arch_tensor=None,
-                  tea_arch_list=None,
                   stu_arch_list=None,
                   tea_forward_fn: Callable[..., torch.Tensor] = None,
                   **kwargs) -> tuple[float, float]:
@@ -1110,10 +1105,7 @@ class Model(BasicObject):
                         get_data_fn=get_data_fn,
                         loss_fn=loss_fn,
                         writer=writer, main_tag=main_tag, tag=tag,
-                        _epoch=_epoch, accuracy_fn=accuracy_fn,  
-                        tea_arch_tensor=tea_arch_tensor, 
-                        stu_arch_tensor=stu_arch_tensor,
-                        tea_arch_list=tea_arch_list,
+                        _epoch=_epoch, accuracy_fn=accuracy_fn, 
                         stu_arch_list=stu_arch_list,
                         tea_forward_fn=tea_forward_fn,
                         **kwargs)
