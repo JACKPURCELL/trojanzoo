@@ -29,8 +29,9 @@ if __name__ == '__main__':
     env = trojanvision.environ.create(**kwargs)
     dataset = trojanvision.datasets.create(**kwargs)
     model = trojanvision.models.create(dataset=dataset, **kwargs)
-    # filename = "/root/work/trojanzoo/cifar10_model.pt"
+    # filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/densenet121.pth"
     # model.load(filename)
+
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
 
     if env['verbose']:

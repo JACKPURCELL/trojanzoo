@@ -29,13 +29,17 @@ if __name__ == '__main__':
     dataset = trojanvision.datasets.create(**kwargs)
     
     kwargs['official'] = False
-    model = trojanvision.models.create(dataset=dataset, **kwargs)
+    # model = trojanvision.models.create(dataset=dataset, **kwargs)
 
     
-    kwargs['model_name'] = 'densenet'
-    kwargs['official'] = True
+    kwargs['model_name'] = 'densenet121'
+    # kwargs['official'] = True
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
-
+    acc, loss = tea_model._validate()
+    
+    filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/densenet121.pth"
+    
+    tea_model.load(filename) 
     print("=====================AFTER LOAD TEACHER==================")
 
     print("=====================AFTER LOAD TEACHER==================")

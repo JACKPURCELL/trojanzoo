@@ -18,6 +18,7 @@ class _DenseNet(_ImageModel):
         super().__init__(**kwargs)
         ModelClass: Callable[..., torchvision.models.DenseNet] = getattr(torchvision.models, name.split('_')[0])
         _model = ModelClass(num_classes=self.num_classes)
+        print(self.num_classes)
         self.features = _model.features
         self.features.add_module('relu', nn.ReLU(inplace=True))
         self.classifier = nn.Sequential(OrderedDict([
