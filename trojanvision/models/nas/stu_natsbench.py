@@ -227,10 +227,10 @@ class STU_NATSbench(ImageModel):
         config = self.api.get_net_config(self.model_index, self.dataset_name)
         return config['arch_str']
 
-    def val_loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
-             _output: torch.Tensor = None, reduction: str = 'batchmean', **kwargs) -> torch.Tensor:
+    # def val_loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
+    #          _output: torch.Tensor = None, reduction: str = 'batchmean', **kwargs) -> torch.Tensor:
 
-        return super().loss(_input, _label, _output, reduction, **kwargs)
+    #     return super().loss(_input, _label, _output, reduction, **kwargs)
 
 
     # def arch_parameters(self) -> list[torch.Tensor]:
@@ -254,19 +254,19 @@ class STU_NATSbench(ImageModel):
         return params
     
     
-    def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None, _soft_label: torch.Tensor = None,
-             _output: torch.Tensor = None, amp: bool = False, reduction: str = 'batchmean',**kwargs) -> torch.Tensor:
-        if _output is None:
-            _output = self(_input, **kwargs)
-        if _soft_label is None:
-            # print("validate")
-            return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
-        temp = 5.0
-        criterion = nn.CrossEntropyLoss(reduction='mean')
-        if amp:
-            with torch.cuda.amp.autocast():
-                return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
-        return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+    # def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None, _soft_label: torch.Tensor = None,
+    #          _output: torch.Tensor = None, amp: bool = False, reduction: str = 'batchmean',**kwargs) -> torch.Tensor:
+    #     if _output is None:
+    #         _output = self(_input, **kwargs)
+    #     if _soft_label is None:
+    #         # print("validate")
+    #         return self.val_loss(_input=_input, _label=_label, _output=_output, amp=amp)
+    #     temp = 5.0
+    #     criterion = nn.CrossEntropyLoss(reduction='mean')
+    #     if amp:
+    #         with torch.cuda.amp.autocast():
+    #             return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+    #     return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
 
         # criterion = nn.KLDivLoss(reduction='mean')
         

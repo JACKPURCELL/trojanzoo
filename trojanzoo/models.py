@@ -13,6 +13,7 @@ from trojanzoo.utils.module import get_name, BasicObject
 from trojanzoo.utils.output import ansi, prints
 from trojanzoo.utils.tensor import add_noise
 from trojanzoo.utils.train import train, validate, compare
+import torch.nn.functional as F
 
 import torch
 import torch.nn as nn
@@ -612,8 +613,19 @@ class Model(BasicObject):
                          layer_name_list=self.layer_name_list,
                          seq_only=seq_only)
 
+    def val_loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
+             _output: torch.Tensor = None, reduction: str = 'batchmean', **kwargs) -> torch.Tensor:
+        
+        criterion = self.criterion_noreduction if reduction == 'none' \
+            else self.criterion
+        if _output is None:
+            _output = self(_input, **kwargs)
+        # print("CrossEntropyLoss")
+        return criterion(_output, _label)
+
+    
     def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
-             _output: torch.Tensor = None, reduction: str = 'mean',
+             _output: torch.Tensor = None, reduction: str = 'mean',_soft_label: torch.Tensor = None,amp: bool = False, 
              **kwargs) -> torch.Tensor:
         r"""Calculate the loss using :attr:`self.criterion`
         (:attr:`self.criterion_noreduction`).
@@ -636,12 +648,27 @@ class Model(BasicObject):
             torch.Tensor:
                 A scalar loss tensor (with shape ``(N)`` if ``reduction='none'``).
         """
-        criterion = self.criterion_noreduction if reduction == 'none' \
-            else self.criterion
+        #Origin
+        # criterion = self.criterion_noreduction if reduction == 'none' \
+        #     else self.criterion
+        # if _output is None:
+        #     _output = self(_input, **kwargs)
+        # # print("CrossEntropyLoss")
+        # return criterion(_output, _label)
+        
         if _output is None:
             _output = self(_input, **kwargs)
-        # print("CrossEntropyLoss")
-        return criterion(_output, _label)
+        if _soft_label is None:
+            # print("validate")
+            return self.val_loss(_input=_input, _label=_label, _output=_output, reduction=reduction)
+        temp = 5.0
+        criterion = nn.CrossEntropyLoss(reduction='mean')
+        # print("DISS_Cross")
+        
+        if amp:
+            with torch.cuda.amp.autocast():
+                return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+        return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
 
     # -------------------------------------------------------- #
 
@@ -1120,10 +1147,6 @@ class Model(BasicObject):
                   writer=None, main_tag: str = 'valid',
                   tag: str = '', _epoch: int = None,
                   accuracy_fn: Callable[..., list[float]] = None,
-                  tea_arch_tensor=None,
-                  stu_arch_tensor=None,
-                tea_arch_list=None,
-                  stu_arch_list=None,
                   **kwargs) -> tuple[float, float]:
         r"""Evaluate the model.
 
@@ -1144,10 +1167,6 @@ class Model(BasicObject):
                         loss_fn=loss_fn,
                         writer=writer, main_tag=main_tag, tag=tag,
                         _epoch=_epoch, accuracy_fn=accuracy_fn,  
-                        tea_arch_tensor=tea_arch_tensor, 
-                        stu_arch_tensor=stu_arch_tensor,
-                                                tea_arch_list=tea_arch_list,
-                        stu_arch_list=stu_arch_list,
                         **kwargs)
 
     def _compare(self, peer: nn.Module = None,

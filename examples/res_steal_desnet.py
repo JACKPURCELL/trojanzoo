@@ -29,6 +29,7 @@ if __name__ == '__main__':
     dataset = trojanvision.datasets.create(**kwargs)
     
     kwargs['official'] = False
+    kwargs['model_name'] = 'resnet18_comp'
     model = trojanvision.models.create(dataset=dataset, **kwargs)
 
     
