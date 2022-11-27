@@ -128,10 +128,10 @@ def distillation(module: nn.Module, num_classes: int,
 #----------------------------------------------------------------
 #-------------------------new---------------------------------------
 
-        if _epoch < 30:
+        if _epoch < 300:
             mode = 'train_STU' #kl loss / return raw data
             print(_epoch,mode)
-        elif _epoch >= 30 :
+        elif _epoch >= 300 :
             mode = 'train_ADV_STU'  #kl loss / return adv data
             print(_epoch,mode)
 
@@ -150,7 +150,15 @@ def distillation(module: nn.Module, num_classes: int,
             # optimizer.zero_grad()
 
 
-            _input, _label, _soft_label = get_data_fn(data, mode=mode)
+            data_out  = get_data_fn(data, mode=mode)
+            if len(data_out)==3:
+                _input = data_out[0]
+                _label = data_out[1]
+                _soft_label = data_out[2]
+            else:
+                _input = data_out[0]
+                _label = data_out[1]
+                _soft_label = tea_forward_fn(_input)
             
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
