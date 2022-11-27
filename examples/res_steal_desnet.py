@@ -34,15 +34,17 @@ if __name__ == '__main__':
 
     
     kwargs['model_name'] = 'stu_nats_bench'
+    kwargs['nats_path'] = '/data/rbp5354/nats/NATS-tss-v1_0-3ffb9-full'
 
     # kwargs['official'] = True
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
-    acc, loss = tea_model._validate()
-    
     filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/nats_300_supernet.pth"
 
     
     tea_model.load(filename) 
+    acc, loss = tea_model._validate()
+    
+
     print("=====================AFTER LOAD TEACHER==================")
 
     print("=====================AFTER LOAD TEACHER==================")

@@ -35,11 +35,12 @@ if __name__ == '__main__':
     kwargs['model_name'] = 'stu_nats_bench'
     # kwargs['official'] = True
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
-    acc, loss = tea_model._validate()
     
     filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/nats_300_supernet.pth"
     
     tea_model.load(filename) 
+    acc, loss = tea_model._validate()
+    
     print("=====================AFTER LOAD TEACHER==================")
 
     print("=====================AFTER LOAD TEACHER==================")
