@@ -151,10 +151,11 @@ def distillation(module: nn.Module, num_classes: int,
 
 
             data_out  = get_data_fn(data, mode=mode)
-            if len(data_out)==3:
+            if len(data_out)==4:
                 _input = data_out[0]
                 _label = data_out[1]
                 _soft_label = data_out[2]
+                _tea_feature_map = data_out[3]
             else:
                 _input = data_out[0]
                 _label = data_out[1]
@@ -163,8 +164,10 @@ def distillation(module: nn.Module, num_classes: int,
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
-            _output = forward_fn(_input, amp=amp, parallel=True)
+            _output, _feature_map = forward_fn(_input, amp=amp, parallel=True)
             loss = loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, amp=amp)
+            criterion = nn.MSELoss(reduction='mean')
+            loss += criterion(_feature_map,_tea_feature_map)
             # print("train loss： ",loss)
             # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
             # _output = forward_fn(_input, amp=amp, parallel=True)
@@ -308,8 +311,8 @@ def dis_validate(module: nn.Module, num_classes: int,
     for data in loader_epoch:
         _input, _label = get_data_fn(data, mode='valid', **kwargs)
         with torch.no_grad():
-            _output = forward_fn(_input)
-            _soft_label = tea_forward_fn(_input)
+            _output,_feature_map = forward_fn(_input)
+            _soft_label,_tea_feature_map = tea_forward_fn(_input)
             crossentropy = float(loss_fn(_input=_input, _label=_label, _output=_output, **kwargs))
             kl_div = float(loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, **kwargs))
             acc1, acc5 = accuracy_fn(

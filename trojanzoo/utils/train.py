@@ -241,7 +241,7 @@ def validate(module: nn.Module, num_classes: int,
     for data in loader_epoch:
         _input, _label = get_data_fn(data, mode='valid', **kwargs)
         with torch.no_grad():
-            _output = forward_fn(_input)
+            _output,_feature_map = forward_fn(_input)
             loss = float(loss_fn(_input, _label, _output=_output, **kwargs))
             acc1, acc5 = accuracy_fn(
                 _output, _label, num_classes=num_classes, topk=(1, 5))

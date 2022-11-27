@@ -154,9 +154,9 @@ class _Model(nn.Module):
 
     def forward(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         r"""``x -> self.get_final_fm -> self.classifier -> return``"""
-        x = self.get_final_fm(x, **kwargs)
+        x,feature_map = self.get_final_fm(x, **kwargs)
         x = self.classifier(x)
-        return x
+        return x,feature_map
 
     # TODO: combine with get_final_fm ? Consider GNN cases.
     def get_fm(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
@@ -166,9 +166,10 @@ class _Model(nn.Module):
     def get_final_fm(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         r"""``x -> self.get_fm -> self.pool -> self.flatten -> return``"""
         x = self.get_fm(x, **kwargs)
+        feature_map = x
         x = self.pool(x)
         x = self.flatten(x)
-        return x
+        return x,feature_map
 
     def __call__(self, *args, **kwargs) -> torch.Tensor:
         return super().__call__(*args, **kwargs)
@@ -620,7 +621,7 @@ class Model(BasicObject):
         criterion = self.criterion_noreduction if reduction == 'none' \
             else self.criterion
         if _output is None:
-            _output = self(_input, **kwargs)
+            _output,_feature_map = self(_input, **kwargs)
         # print("CrossEntropyLoss")
         return criterion(_output, _label)
 
@@ -656,9 +657,11 @@ class Model(BasicObject):
         #     _output = self(_input, **kwargs)
         # # print("CrossEntropyLoss")
         # return criterion(_output, _label)
-        
+        flag=0
         if _output is None:
-            _output = self(_input, **kwargs)
+            _output,_feature_map = self(_input, **kwargs)
+            flag=1
+            
         if _soft_label is None:
             # print("validate")
             return self.val_loss(_input=_input, _label=_label, _output=_output, reduction=reduction)
@@ -666,10 +669,16 @@ class Model(BasicObject):
         criterion = nn.CrossEntropyLoss(reduction='mean')
         # print("DISS_Cross")
         
-        if amp:
-            with torch.cuda.amp.autocast():
-                return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
-        return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+        if flag == 1:
+            if amp:
+                with torch.cuda.amp.autocast():
+                    return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1)),_feature_map
+            return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1)),_feature_map
+        else:
+            if amp:
+                with torch.cuda.amp.autocast():
+                    return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+            return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
 
 
     # -------------------------------------------------------- #

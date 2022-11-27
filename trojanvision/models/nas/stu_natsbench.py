@@ -356,18 +356,18 @@ class STU_NATSbench(ImageModel):
                 data_valid = next(self.valid_iterator)
                 input_valid, label_valid = get_data_old(data_valid, adv_train=adv_train, **kwargs)
                 self.arch_optimizer.zero_grad()
-                _soft_label_valid = tea_forward_fn(input_valid,**kwargs)
+                _soft_label_valid,_tea_feature_map_valid = tea_forward_fn(input_valid,**kwargs)
                 _soft_label_valid.detach()
-                loss = self.loss(_input=input_valid, _soft_label=_soft_label_valid)
+                loss,_feature_map = self.loss(_input=input_valid, _soft_label=_soft_label_valid)
+                criterion = nn.MSELoss(reduction='mean')
+                loss += criterion(_feature_map,_tea_feature_map_valid)
                 loss.backward(inputs=self._model.arch_parameters())
+                
                 self.arch_optimizer.step()
-                _soft_label = tea_forward_fn(_input,**kwargs)
-                return _input, _label, _soft_label
+                _soft_label, _tea_feature_map = tea_forward_fn(_input,**kwargs)
+                return _input, _label, _soft_label, _tea_feature_map
         
-                # _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
-                # _soft_label = tea_forward_fn(_input,**kwargs)
-                # _soft_label.detach()
-                # return _input, _label, _soft_label
+
             elif mode =='valid':
                 _input, _label = get_data_old(data, adv_train=adv_train, **kwargs)
                 return _input, _label
