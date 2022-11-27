@@ -33,12 +33,14 @@ if __name__ == '__main__':
     model = trojanvision.models.create(dataset=dataset, **kwargs)
 
     
-    kwargs['model_name'] = 'densenet121_comp'
+    kwargs['model_name'] = 'stu_nats_bench'
+
     # kwargs['official'] = True
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
     acc, loss = tea_model._validate()
     
-    filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/densenet121_comp.pth"
+    filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/nats_300_supernet.pth"
+
     
     tea_model.load(filename) 
     print("=====================AFTER LOAD TEACHER==================")
