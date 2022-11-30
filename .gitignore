@@ -58,3 +58,4 @@ data/model/image/cifar10/darts_supernet_150ep.pth
 data/model/image/cifar10/stu_nats_bench_at-pgd.pth
 /runs
 /data
+data/model/image/cifar10/stu_nats_bench.pth

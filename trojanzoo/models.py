@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 from trojanzoo.configs import config
 from trojanzoo.datasets import Dataset
 from trojanzoo.environ import env
@@ -1174,6 +1175,17 @@ class Model(BasicObject):
         loss_fn = loss_fn or self.loss
         accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
         kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
+
+
+        def fun(variable):
+            num = ['0','1','2','3','4','5','6','7','8','9','']
+            if (variable in num):
+                return False
+            else:
+                return True
+
+        stu_arch_list = list(filter(fun, re.split('\+|\||~',self.arch_str)))
+        print(stu_arch_list)
         return validate(module=module, num_classes=num_classes, loader=loader,
                         print_prefix=print_prefix,
                         indent=indent, verbose=verbose,

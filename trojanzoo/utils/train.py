@@ -189,6 +189,9 @@ def train(module: nn.Module, num_classes: int,
                                           verbose=verbose, indent=indent,
                                           **kwargs)
             cur_acc = validate_result[0]
+            if save:
+                save_fn(file_path=file_path, folder_path=folder_path,
+                        suffix=str(_epoch), verbose=verbose)
             if cur_acc >= best_acc:
                 best_validate_result = validate_result
                 if verbose:
