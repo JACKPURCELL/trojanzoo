@@ -37,7 +37,7 @@ if __name__ == '__main__':
     tea_model = trojanvision.models.create(dataset=dataset, **kwargs)
     acc, loss = tea_model._validate()
     
-    filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/nats_300_supernet.pth"
+    filename = "/home/jkl6486/trojanzoo/data/model/image/cifar10/stu_nats_bench7.pth"
     
     tea_model.load(filename) 
     print("=====================AFTER LOAD TEACHER==================")

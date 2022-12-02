@@ -200,7 +200,9 @@ class STU_NATSbench(ImageModel):
             'affine': True,
             'track_running_stats': True,
         }
-        
+        torch.manual_seed(222)
+
+        torch.cuda.manual_seed(222)
         
         network = self.get_cell_based_tiny_net(config)
         self._model.load_model(network)
@@ -209,12 +211,12 @@ class STU_NATSbench(ImageModel):
         for alpha in self._model.arch_parameters():
                 alpha.requires_grad_()
         train2, train3 = self.dataset.split_dataset(
-            self.dataset.get_dataset('train'),
+            self.dataset.get_dataset('valid'),
             percent=0.5)
         self.train2 = self.dataset.get_dataloader(
-            mode='train', dataset=train2)
+            mode='valid', dataset=train2)
         self.train3 = self.dataset.get_dataloader(
-            mode='train', dataset=train3)
+            mode='valid', dataset=train3)
         self.valid_iterator = itertools.cycle(self.train3)
         self.arch_optimizer = torch.optim.Adam(self._model.arch_parameters(),
                                                    lr=arch_lr, betas=(0.5, 0.999),
