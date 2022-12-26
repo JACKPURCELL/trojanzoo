@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 from trojanvision.datasets.imagefolder import ImageFolder
 
 from .cub200 import CUB200, CUB200_2011
@@ -7,10 +8,10 @@ from .gtsrb import GTSRB
 from .imagenet import ImageNet, Sample_ImageNet
 from .isic import ISIC2018
 from .vggface2 import VGGface2, Sample_VGGface2
-
+from .raf import RafDataset
 
 __all__ = ['CUB200', 'CUB200_2011', 'GTSRB', 'ImageNet', 'ISIC2018',
-           'VGGface2', 'Sample_ImageNet', 'Sample_VGGface2', ]
+           'VGGface2', 'Sample_ImageNet', 'Sample_VGGface2', 'RafDataset',]
 
 class_dict: dict[str, ImageFolder] = {
     'cub200': CUB200,
@@ -21,4 +22,5 @@ class_dict: dict[str, ImageFolder] = {
     'vggface2': VGGface2,
     'sample_imagenet': Sample_ImageNet,
     'sample_vggface2': Sample_VGGface2,
+    'raf': RafDataset,
 }
