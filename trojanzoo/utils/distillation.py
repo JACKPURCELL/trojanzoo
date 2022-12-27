@@ -78,8 +78,9 @@ def distillation(module: nn.Module, num_classes: int,
     total_iter = (epochs - resume) * len_loader_train
 
     logger = MetricLogger()
-    logger.create_meters(crossentropy=None, kl_div=None, top1=None, top5=None)
 
+    logger.create_meters(  gt_loss=None, gt_acc1=None, gt_acc5=None, 
+                          hapi_loss=None, hapi_acc1=None, hapi_acc5=None)
     if resume and lr_scheduler:
         for _ in range(resume):
             lr_scheduler.step()
@@ -148,16 +149,8 @@ def distillation(module: nn.Module, num_classes: int,
             # optimizer.zero_grad()
 
 
-            data_out  = get_data_fn(data, mode=mode)
-            if len(data_out)==3:
-                _input = data_out[0]
-                _label = data_out[1]
-                _soft_label = data_out[2]
-            else:
-                _input = data_out[0]
-                _label = data_out[1]
-                _soft_label = tea_forward_fn(_input)
-            
+            _input, _label, _soft_label, hapi_label  = get_data_fn(data, mode=mode)
+
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
                 #TODO: maybe can remove
@@ -165,7 +158,7 @@ def distillation(module: nn.Module, num_classes: int,
             loss = loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, amp=amp)
             # print("train loss： ",loss)
             # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
-            # _output = forward_fn(_input, amp=amp, parallel=True)
+            # _output =  forward_fn(_input, amp=amp, parallel=True)
             # loss = soft_loss_fn(_input, soft_target,_output)
             if backward_and_step:
                 optimizer.zero_grad()
@@ -213,9 +206,13 @@ def distillation(module: nn.Module, num_classes: int,
 
             if lr_scheduler and lr_scheduler_freq == 'iter':
                 lr_scheduler.step()
-            acc1, acc5 = 0.0,0.0
+            hapi_acc1, hapi_acc5 = accuracy_fn(
+                _output, hapi_label, num_classes=num_classes, topk=(1, 5))
+            gt_acc1, gt_acc5 = accuracy_fn(
+                _output, _label, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
-            logger.update(n=batch_size, kl_div=float(loss), top1=acc1, top5=acc5)
+            logger.update(n=batch_size, gt_acc1=gt_acc1, gt_acc5=gt_acc5, 
+                        hapi_loss=float(loss), hapi_acc1=hapi_acc1, hapi_acc5=hapi_acc5)
             empty_cache()
         optimizer.zero_grad()
         if lr_scheduler and lr_scheduler_freq == 'epoch':
@@ -223,17 +220,20 @@ def distillation(module: nn.Module, num_classes: int,
         if change_train_eval:
             module.eval()
         activate_params(module, [])
-        loss, acc = (logger.meters['kl_div'].global_avg,
-                     logger.meters['top1'].global_avg)
+        gt_acc1, hapi_loss, hapi_acc1 = (
+                 logger.meters['gt_acc1'].global_avg,
+                 logger.meters['hapi_loss'].global_avg,
+                 logger.meters['hapi_acc1'].global_avg)
         if writer is not None:
             from torch.utils.tensorboard import SummaryWriter
             assert isinstance(writer, SummaryWriter)
-            writer.add_scalars(main_tag='kl_div/' + main_tag,
-                               tag_scalar_dict={tag: loss},
-                               global_step=_epoch + start_epoch)
-            writer.add_scalars(main_tag='Acc/' + main_tag,
-                               tag_scalar_dict={tag: acc},
-                               global_step=_epoch + start_epoch)
+            writer.add_scalars(main_tag='gt_acc1/' + main_tag,
+                        tag_scalar_dict={tag: gt_acc1}, global_step=_epoch + start_epoch)        
+            writer.add_scalars(main_tag='hapi_loss/' + main_tag,
+                        tag_scalar_dict={tag: hapi_loss}, global_step=_epoch + start_epoch)
+            writer.add_scalars(main_tag='hapi_acc1/' + main_tag,
+                    tag_scalar_dict={tag: hapi_acc1}, global_step=_epoch + start_epoch)
+            
         if validate_interval != 0 and (_epoch % validate_interval == 0 or _epoch == epochs):
             validate_result = validate_fn(module=module,
                                           num_classes=num_classes,
@@ -290,7 +290,8 @@ def dis_validate(module: nn.Module, num_classes: int,
     loss_fn = loss_fn or nn.CrossEntropyLoss()
     accuracy_fn = accuracy_fn or accuracy
     logger = MetricLogger()
-    logger.create_meters(crossentropy=None, kl_div=None, top1=None, top5=None,diff=None,dis=None)
+    logger.create_meters( gt_loss=None, gt_acc1=None, gt_acc5=None, 
+                          hapi_loss=None, hapi_acc1=None, hapi_acc5=None)
     loader_epoch = loader  
     if verbose:
         header: str = '{yellow}{0}{reset}'.format(print_prefix, **ansi)
@@ -299,42 +300,38 @@ def dis_validate(module: nn.Module, num_classes: int,
                                         tqdm_header='Batch',
                                         indent=indent)
     for data in loader_epoch:
-        _input, _label = get_data_fn(data, mode='valid', **kwargs)
+        _input, _label, _soft_label, hapi_label = get_data_fn(data, mode='valid', **kwargs)
         with torch.no_grad():
             _output = forward_fn(_input)
-            _soft_label = tea_forward_fn(_input)
-            crossentropy = float(loss_fn(_input=_input, _label=_label, _output=_output, **kwargs))
-            kl_div = float(loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, **kwargs))
-            acc1, acc5 = accuracy_fn(
+            gt_loss = float(loss_fn(_input=_input, _label=_label, _output=_output, **kwargs))
+            hapi_loss = float(loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, **kwargs))
+            hapi_acc1, hapi_acc5 = accuracy_fn(
+                _output, hapi_label, num_classes=num_classes, topk=(1, 5))
+            gt_acc1, gt_acc5 = accuracy_fn(
                 _output, _label, num_classes=num_classes, topk=(1, 5))
             batch_size = int(_label.size(0))
-            logger.update(n=batch_size, crossentropy=float(crossentropy), kl_div=kl_div, top1=acc1, top5=acc5)
+            logger.update(n=batch_size, gt_loss=float(gt_loss), gt_acc1=gt_acc1, gt_acc5=gt_acc5, 
+                          hapi_loss=float(hapi_loss), hapi_acc1=hapi_acc1, hapi_acc5=hapi_acc5)
             
-    acc, loss = (logger.meters['top1'].global_avg,
-                 logger.meters['kl_div'].global_avg)
-    print("stu_arch_list: ",stu_arch_list)
-        
+    gt_loss, gt_acc1, hapi_loss, hapi_acc1 = (logger.meters['gt_loss'].global_avg,
+                 logger.meters['gt_acc1'].global_avg,
+                 logger.meters['hapi_loss'].global_avg,
+                 logger.meters['hapi_acc1'].global_avg)
 
 
-    # normal_L2_norm = torch.diag(torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
-    # reduce_L2_norm = torch.diag(torch.cdist(tea_arch_list[1], stu_arch_list[1],2))
-
-    # print("tea_arch_list_normal: ", tea_arch_list[0])
-    # print("stu_arch_list_normal: ", stu_arch_list[0])
-    # print("beforeDaig",torch.cdist(tea_arch_list[0], stu_arch_list[0],2))
-    
-    # print("alphas_normal: ", normal_L2_norm, torch.mean(normal_L2_norm))
-    # print("alphas_reduce: ", reduce_L2_norm, torch.mean(reduce_L2_norm))
-
-    
     if writer is not None and _epoch is not None and main_tag:
         from torch.utils.tensorboard import SummaryWriter
         assert isinstance(writer, SummaryWriter)
-        writer.add_scalars(main_tag='Acc/' + main_tag,
-                           tag_scalar_dict={tag: acc}, global_step=_epoch)
-        writer.add_scalars(main_tag='kl_div/' + main_tag,
-                           tag_scalar_dict={tag: loss}, global_step=_epoch)
-    return acc, loss
+        writer.add_scalars(main_tag='gt_loss/' + main_tag,
+                    tag_scalar_dict={tag: gt_loss}, global_step=_epoch)
+        writer.add_scalars(main_tag='gt_acc1/' + main_tag,
+                    tag_scalar_dict={tag: gt_acc1}, global_step=_epoch)        
+        writer.add_scalars(main_tag='hapi_loss/' + main_tag,
+                    tag_scalar_dict={tag: hapi_loss}, global_step=_epoch)
+        writer.add_scalars(main_tag='hapi_acc1/' + main_tag,
+                    tag_scalar_dict={tag: hapi_acc1}, global_step=_epoch)
+
+    return hapi_acc1, hapi_loss
 
 
 @torch.no_grad()

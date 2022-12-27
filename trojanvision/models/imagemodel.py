@@ -467,12 +467,12 @@ class ImageModel(Model):
         # In training process, `adv_train` args will not be passed to `get_data`.
         # It's passed to `_validate`.
         # So it's always `False`.
-        _input, _label = super().get_data(data, **kwargs)
+        _input, _label, _soft_label, hapi_label = super().get_data(data, **kwargs)
         if adv_train:
             assert self.pgd is not None
             adv_x, _ = self.pgd.optimize(_input=_input, target=_label)
-            return adv_x, _label
-        return _input, _label
+            return adv_x, _label, _soft_label, hapi_label
+        return _input, _label, _soft_label, hapi_label
 
     def _validate(self, adv_train: None | bool | str = None, **kwargs) -> tuple[float, float]:
         r""""""

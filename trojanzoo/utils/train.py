@@ -59,12 +59,12 @@ def train(module: nn.Module, num_classes: int,
     if amp:
         scaler = torch.cuda.amp.GradScaler()
     best_validate_result = (0.0, float('inf'))
-    if validate_interval != 0:
-        best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
-                                           forward_fn=forward_fn, loss_fn=loss_fn,
-                                           writer=None, tag=tag, _epoch=start_epoch,
-                                           verbose=verbose, indent=indent, **kwargs)
-        best_acc = best_validate_result[0]
+    # if validate_interval != 0:
+    #     best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
+    #                                        forward_fn=forward_fn, loss_fn=loss_fn,
+    #                                        writer=None, tag=tag, _epoch=start_epoch,
+    #                                        verbose=verbose, indent=indent, **kwargs)
+    #     best_acc = best_validate_result[0]
 
     params: list[nn.Parameter] = []
     for param_group in optimizer.param_groups:

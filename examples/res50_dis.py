@@ -24,9 +24,13 @@ if __name__ == '__main__':
     
     kwargs = parser.parse_args().__dict__
 
+
     env = trojanvision.environ.create(**kwargs)
     dataset = trojanvision.datasets.create(**kwargs)
     
+    #init resnet50 model
+    # kwargs['official'] = True
+    # kwargs['model_name'] = 'resnet50_comp'
     model = trojanvision.models.create(dataset=dataset, **kwargs)
 
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
