@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import os
 import cv2
 import numpy as np
@@ -15,24 +16,51 @@ from typing import Union
 import re
 from trojanvision.utils.dataset import ZipFolder
 import hapi
+hapi.config.data_dir = "/home/ljc/HAPI" 
 hapi.config.data_dir = "/home/jkl6486/HAPI" 
 hapi.download()
 class _RAF(datasets.ImageFolder):
+    def add_argument(group: argparse._ArgumentGroup) -> argparse._ArgumentGroup:
+        r"""Add dataset arguments to argument parser group.
+        View source to see specific arguments.
+
+        Note:
+            This is the implementation of adding arguments.
+            The concrete dataset class may override this method to add more arguments.
+            For users, please use :func:`add_argument()` instead, which is more user-friendly.
+        """
+        group.add_argument('--hapi_data_dir', help='directory to hapi')
+        group.add_argument('--hapi_info', help='hapi info')
+        return group
     
-    def __init__(self, mode:str=None, **kwargs):
+    def __init__(self, mode:str=None, hapi_data_dir:str = None, hapi_info:str = None, **kwargs):
 
         super().__init__(**kwargs)
         mode = self.root.split('/')[-1]
         if mode == 'valid':
             mode = 'test'
-        predictions =  hapi.get_predictions(task="fer", dataset="rafdb", date="22-05-23", api=["google_fer"])
-        self.info = torch.zeros(len(self.targets) + 1,2)
         dic = str('fer/rafdb/google_fer/22-05-23')
+        dic_split = dic.split('/')
+        predictions =  hapi.get_predictions(task=dic_split[0], dataset=dic_split[1], date=dic_split[3], api=dic_split[2])
+        # gt_labels =  hapi.get_labels(task="fer", dataset="rafdb")
+        # self.info = torch.zeros(len(self.targets) + 1,2)
+        self.info_lb = torch.zeros(len(self.targets) + 1,dtype=torch.long)
+        self.info_conf = torch.zeros(len(self.targets) + 1)
+        # self.info_gt = torch.zeros(len(self.targets) + 1,2)
+        dic = str('fer/rafdb/google_fer/22-05-23')
+        # dic_gt=str('fer/rafdb')
         for i in range(len(predictions[dic])):
             hapi_mode = predictions[dic][i]['example_id'].split('_')[0]
             hapi_id = int(predictions[dic][i]['example_id'].split('_')[1])
             if hapi_mode == mode:
-                self.info[hapi_id] = torch.tensor((predictions[dic][i]['predicted_label'], predictions[dic][i]['confidence']))
+                self.info_lb[hapi_id] = torch.tensor((predictions[dic][i]['predicted_label']))
+                self.info_conf[hapi_id] = torch.tensor((predictions[dic][i]['confidence']))
+        # for i in range(len(gt_labels[dic_gt])):
+        #     hapi_mode = gt_labels[dic_gt][i]['example_id'].split('_')[0]
+        #     hapi_id = int(gt_labels[dic_gt][i]['example_id'].split('_')[1])
+        #     if hapi_mode == mode:
+        #         self.info_gt[hapi_id] = torch.tensor((gt_labels[dic_gt][i]['true_label']))
+              
 
         # self.idx2name = list_string(numpy)/torch.tensor (zip取0)
     # def __getitem__():
@@ -55,11 +83,12 @@ class _RAF(datasets.ImageFolder):
             target = self.target_transform(target)
 
         hapi_id = torch.tensor(int(re.findall(r'_(.*).jpg', path)[0]))
-        hapi_label = self.info[hapi_id][0]
-        hapi_confidence = self.info[hapi_id][1]
+        hapi_label = self.info_lb[hapi_id]
+        hapi_confidence = self.info_conf[hapi_id]
         other_confidence = (1 - hapi_confidence)/6
         soft_label = torch.ones(7)*other_confidence
         soft_label[int(hapi_label)] = hapi_confidence
+        # gt_label = self.info_gt[hapi_id][0
         
         return sample, target, soft_label, hapi_label
     
@@ -83,8 +112,8 @@ class RAF(ImageFolder):
                 kwargs['memory'] = self.memory
         return DatasetClass(root=root, **kwargs)
     
-    def get_data(self, data: tuple[torch.Tensor, torch.Tensor, torch.Tensor],
-                **kwargs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def get_data(self, data: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
+                **kwargs) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         r"""Process image data.
         Defaults to put input and label on ``env['device']`` with ``non_blocking``
         and transform label to ``torch.LongTensor``.
