@@ -16,22 +16,24 @@ from typing import Union
 import re
 from trojanvision.utils.dataset import ZipFolder
 import hapi
-hapi.config.data_dir = "/home/ljc/HAPI" 
+# hapi.config.data_dir = "/home/ljc/HAPI" 
 hapi.config.data_dir = "/home/jkl6486/HAPI" 
 hapi.download()
 class _RAF(datasets.ImageFolder):
-    def add_argument(group: argparse._ArgumentGroup) -> argparse._ArgumentGroup:
-        r"""Add dataset arguments to argument parser group.
-        View source to see specific arguments.
+    # def add_argument(group: argparse._ArgumentGroup) -> argparse._ArgumentGroup:
+    #     r"""Add dataset arguments to argument parser group.
+    #     View source to see specific arguments.
 
-        Note:
-            This is the implementation of adding arguments.
-            The concrete dataset class may override this method to add more arguments.
-            For users, please use :func:`add_argument()` instead, which is more user-friendly.
-        """
-        group.add_argument('--hapi_data_dir', help='directory to hapi')
-        group.add_argument('--hapi_info', help='hapi info')
-        return group
+    #     Note:
+    #         This is the implementation of adding arguments.
+    #         The concrete dataset class may override this method to add more arguments.
+    #         For users, please use :func:`add_argument()` instead, which is more user-friendly.
+    #     """
+    #     super().add_argument(group)
+        
+    #     group.add_argument('--hapi_data_dir', help='directory to hapi')
+    #     group.add_argument('--hapi_info', help='hapi info')
+    #     return group
     
     def __init__(self, mode:str=None, hapi_data_dir:str = None, hapi_info:str = None, **kwargs):
 
@@ -39,7 +41,7 @@ class _RAF(datasets.ImageFolder):
         mode = self.root.split('/')[-1]
         if mode == 'valid':
             mode = 'test'
-        dic = str('fer/rafdb/google_fer/22-05-23')
+        dic = str('fer/rafdb/microsoft_fer/22-05-23')
         dic_split = dic.split('/')
         predictions =  hapi.get_predictions(task=dic_split[0], dataset=dic_split[1], date=dic_split[3], api=dic_split[2])
         # gt_labels =  hapi.get_labels(task="fer", dataset="rafdb")
@@ -47,7 +49,6 @@ class _RAF(datasets.ImageFolder):
         self.info_lb = torch.zeros(len(self.targets) + 1,dtype=torch.long)
         self.info_conf = torch.zeros(len(self.targets) + 1)
         # self.info_gt = torch.zeros(len(self.targets) + 1,2)
-        dic = str('fer/rafdb/google_fer/22-05-23')
         # dic_gt=str('fer/rafdb')
         for i in range(len(predictions[dic])):
             hapi_mode = predictions[dic][i]['example_id'].split('_')[0]

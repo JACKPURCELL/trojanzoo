@@ -626,7 +626,7 @@ class Model(BasicObject):
     
     def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
              _output: torch.Tensor = None, reduction: str = 'mean',_soft_label: torch.Tensor = None,amp: bool = False, 
-             **kwargs) -> torch.Tensor:
+             temp: float = 1.0, **kwargs) -> torch.Tensor:
         r"""Calculate the loss using :attr:`self.criterion`
         (:attr:`self.criterion_noreduction`).
 
@@ -661,7 +661,7 @@ class Model(BasicObject):
         if _soft_label is None:
             # print("validate")
             return self.val_loss(_input=_input, _label=_label, _output=_output, reduction=reduction)
-        temp = 5.0
+
         criterion = nn.CrossEntropyLoss(reduction='mean')
         # print("DISS_Cross")
         
