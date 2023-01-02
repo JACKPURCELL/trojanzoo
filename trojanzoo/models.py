@@ -664,11 +664,15 @@ class Model(BasicObject):
 
         criterion = nn.CrossEntropyLoss(reduction='mean')
         # print("DISS_Cross")
-        
         if amp:
             with torch.cuda.amp.autocast():
-                return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
-        return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+                return criterion(_output,_soft_label)
+        return criterion(_output,_soft_label)
+    
+        # if amp:
+        #     with torch.cuda.amp.autocast():
+        #         return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
+        # return criterion(_output/temp,F.softmax(_soft_label/temp,dim=1))
 
     # -------------------------------------------------------- #
 
