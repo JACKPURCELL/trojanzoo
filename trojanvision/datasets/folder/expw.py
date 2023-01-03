@@ -18,7 +18,7 @@ from trojanvision.utils.dataset import ZipFolder
 import hapi
 # hapi.config.data_dir = "/home/ljc/HAPI" 
 
-class _RAF(datasets.ImageFolder):
+class _EXPW(datasets.ImageFolder):
     
     def __init__(self, mode:str=None, hapi_data_dir:str = None, hapi_info:str = None, **kwargs):
 
@@ -82,8 +82,8 @@ class _RAF(datasets.ImageFolder):
         
         return sample, target, soft_label, hapi_label
     
-class RAF(ImageFolder):
-    name = 'RAFDB'
+class EXPW(ImageFolder):
+    name = 'EXPW'
     num_classes = 7
 
     @classmethod
