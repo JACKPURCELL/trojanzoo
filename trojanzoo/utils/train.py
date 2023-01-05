@@ -59,12 +59,12 @@ def train(module: nn.Module, num_classes: int,
     if amp:
         scaler = torch.cuda.amp.GradScaler()
     best_validate_result = (0.0, float('inf'))
-    # if validate_interval != 0:
-    #     best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
-    #                                        forward_fn=forward_fn, loss_fn=loss_fn,
-    #                                        writer=None, tag=tag, _epoch=start_epoch,
-    #                                        verbose=verbose, indent=indent, **kwargs)
-    #     best_acc = best_validate_result[0]
+    if validate_interval != 0:
+        best_validate_result = validate_fn(loader=loader_valid, get_data_fn=get_data_fn,
+                                           forward_fn=forward_fn, loss_fn=loss_fn,
+                                           writer=None, tag=tag, _epoch=start_epoch,
+                                           verbose=verbose, indent=indent, **kwargs)
+        best_acc = best_validate_result[0]
 
     params: list[nn.Parameter] = []
     for param_group in optimizer.param_groups:
@@ -107,7 +107,7 @@ def train(module: nn.Module, num_classes: int,
         for i, data in enumerate(loader_epoch):
             _iter = _epoch * len_loader_train + i
             # data_time.update(time.perf_counter() - end)
-            _input, _label = get_data_fn(data, mode='train')
+            _input, _label, _soft_label, hapi_label = get_data_fn(data, mode='train')
             if pre_conditioner is not None and not amp:
                 pre_conditioner.track.enable()
             _output = forward_fn(_input, amp=amp, parallel=True)
@@ -239,7 +239,7 @@ def validate(module: nn.Module, num_classes: int,
                                         tqdm_header='Batch',
                                         indent=indent)
     for data in loader_epoch:
-        _input, _label = get_data_fn(data, mode='valid', **kwargs)
+        _input, _label, _soft_label, hapi_label = get_data_fn(data, mode='valid', **kwargs)
         with torch.no_grad():
             _output = forward_fn(_input)
             loss = float(loss_fn(_input, _label, _output=_output, **kwargs))
