@@ -8,6 +8,8 @@ import re
 import trojanvision
 import argparse
 import torch
+import numpy as np
+import random
 
 
 from time import time
@@ -20,7 +22,14 @@ if __name__ == '__main__':
     trojanvision.models.add_argument(parser)
     trojanvision.trainer.add_argument(parser)
     # trojanvision.attacks.add_argument(parser)
-    torch.random.manual_seed(int(time()))
+    seed = int(time())
+    print("seed",seed)
+    torch.manual_seed(seed)
+    torch.random.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
     
     kwargs = parser.parse_args().__dict__
 
@@ -33,7 +42,7 @@ if __name__ == '__main__':
 
     if env['verbose']:
         trojanvision.summary(env=env, dataset=dataset, model=model, trainer=trainer)
-    model._distillation(**trainer)
+    model._train(**trainer)
 
 
 
