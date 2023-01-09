@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
 
     model = trojanvision.models.create(dataset=dataset, **kwargs)
-    filename = "/home/jkl6486/trojanzoo/data/model/image/RAFDB/rafdb_mic_2202-sgd.pth"
+    filename = "/home/jkl6486/trojanzoo/data/model/image/RAFDB/rafdb-sgd-gt.pth"
     model.load(filename)
     trainer = trojanvision.trainer.create(dataset=dataset, model=model, **kwargs)
 

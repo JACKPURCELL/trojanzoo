@@ -45,12 +45,7 @@ if __name__ == '__main__':
         newpath = "/data/jc/data/image/EXPW/image_class/" + expression_label + '/' + example_id + ".jpg"
         cv2.imwrite(newpath, face)
         # {"confidence":0.99991,"predicted_label":3,"example_id":"amazed_teacher_289_0"}
-        
-        
-        
-        
-        
-        
+
         num += 1
         line = f.readline()
     f.close()
