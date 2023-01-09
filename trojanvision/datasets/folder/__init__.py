@@ -10,9 +10,11 @@ from .isic import ISIC2018
 from .vggface2 import VGGface2, Sample_VGGface2
 from .raf import RAF
 from .ferplus import FERPLUS
+from .expw import EXPW_112
+from .expw import EXPW_224
 
 __all__ = ['CUB200', 'CUB200_2011', 'GTSRB', 'ImageNet', 'ISIC2018',
-           'VGGface2', 'Sample_ImageNet', 'Sample_VGGface2', 'RAF','FERPLUS',]
+           'VGGface2', 'Sample_ImageNet', 'Sample_VGGface2', 'RAF','FERPLUS','EXPW_112','EXPW_224']
 
 class_dict: dict[str, ImageFolder] = {
     'cub200': CUB200,
@@ -25,4 +27,6 @@ class_dict: dict[str, ImageFolder] = {
     'sample_vggface2': Sample_VGGface2,
     'raf': RAF,
     'ferplus': FERPLUS,
+    'expw_112':EXPW_112,
+    'expw_224':EXPW_224,
 }

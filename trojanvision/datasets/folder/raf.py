@@ -24,7 +24,7 @@ class _RAF(datasets.ImageFolder):
 
         super().__init__(**kwargs)
         hapi.config.data_dir = hapi_data_dir
-        hapi.download()
+        # hapi.download()
         if mode is None:
             mode = self.root.split('/')[-1]
         if mode == 'valid':
