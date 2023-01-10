@@ -118,6 +118,8 @@ class Dataset(ABC, BasicObject):
                            help='download dataset if not exist by calling '
                            'self.initialize()')
         group.add_argument('--data_dir', help='directory to contain datasets')
+        group.add_argument('--split_percent', type=float,
+                           help='split_percent ex.0.5')
         return group
 
     def __init__(self, batch_size: int = None,
@@ -125,6 +127,7 @@ class Dataset(ABC, BasicObject):
                  folder_path: str = None, download: bool = False,
                  split_ratio: float = 0.8, num_workers: int = 4,
                  loss_weights: bool | np.ndarray | torch.Tensor = False,
+                 split_percent: float = 1.0,
                  **kwargs):
         super().__init__(**kwargs)
         self.param_list['dataset'] = ['num_classes', 'batch_size', 'valid_batch_size',
@@ -135,6 +138,7 @@ class Dataset(ABC, BasicObject):
         self.valid_batch_size = valid_batch_size
         self.split_ratio = split_ratio
         self.num_workers = num_workers
+        self.split_percent = split_percent
         self.collate_fn: Callable[[Iterable[torch.Tensor]], Iterable[torch.Tensor]] = None
         # ----------------------------------------------- #
 
@@ -412,7 +416,12 @@ class Dataset(ABC, BasicObject):
         if num_workers is None:
             num_workers = self.num_workers
         if dataset is None:
-            dataset = self.get_dataset(mode=mode, **kwargs)
+            if mode == 'train':
+                dataset, _ = self.split_dataset(
+                    self.get_dataset(mode=mode,**kwargs),
+                    percent=self.split_percent)
+            else:
+                dataset = self.get_dataset(mode=mode, **kwargs)
         pin_memory = pin_memory and env['num_gpus']
         collate_fn = collate_fn or self.collate_fn
         return torch.utils.data.DataLoader(
