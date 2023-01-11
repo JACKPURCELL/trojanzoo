@@ -27,22 +27,19 @@ class _FERPLUS(datasets.ImageFolder):
         # hapi.download()
         if mode is None:
             mode = self.root.split('/')[-1]
-        if mode == 'valid':
-            dic = hapi_info 
 
-            dic_split = dic.split('/')
-            predictions =  hapi.get_predictions(task=dic_split[0], dataset=dic_split[1], date=dic_split[3], api=dic_split[2])
+        dic = hapi_info 
 
-            self.info_lb = torch.zeros(35810 + 1,dtype=torch.long)
-            self.info_conf = torch.zeros(35810 + 1)
+        dic_split = dic.split('/')
+        predictions =  hapi.get_predictions(task=dic_split[0], dataset=dic_split[1], date=dic_split[3], api=dic_split[2])
 
-            for i in range(len(predictions[dic])):
-                hapi_id = int(predictions[dic][i]['example_id'].split('fer')[-1])
-                self.info_lb[hapi_id] = torch.tensor((predictions[dic][i]['predicted_label']))
-                self.info_conf[hapi_id] = torch.tensor((predictions[dic][i]['confidence']))
-        else:
-            self.info_lb = torch.zeros(35810 + 1,dtype=torch.long)
-            self.info_conf = torch.zeros(35810 + 1)
+        self.info_lb = torch.zeros(35810 + 1,dtype=torch.long)
+        self.info_conf = torch.zeros(35810 + 1)
+
+        for i in range(len(predictions[dic])):
+            hapi_id = int(predictions[dic][i]['example_id'].split('fer')[-1])
+            self.info_lb[hapi_id] = torch.tensor((predictions[dic][i]['predicted_label']))
+            self.info_conf[hapi_id] = torch.tensor((predictions[dic][i]['confidence']))
    
     
     def __getitem__(self, index: int) -> Tuple[Any, Any]:

@@ -7,7 +7,7 @@ dic = str('fer/ferplus')
 # dic_split = dic.split('/')
 # predictions =  hapi.get_predictions(task=dic_split[0], dataset=dic_split[1], date=dic_split[3], api=dic_split[2])
 predictions =  hapi.get_labels(task="fer", dataset="ferplus")
-path="/home/jkl6486/FERPlus/data_backup/"
+path="/data/jc/data/image/FERPP"
 
 for i in range(len(predictions[dic])):
     prefixs=["FER2013Train","FER2013Valid","FER2013Test"]
