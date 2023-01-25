@@ -17,7 +17,16 @@ import re
 from trojanvision.utils.dataset import ZipFolder
 import hapi
 # hapi.config.data_dir = "/home/ljc/HAPI" 
+class TransformTwice:
+    def __init__(self, transform):
+        self.transform = transform
 
+    def __call__(self, inp):
+        out1 = self.transform(inp)
+        out2 = self.transform(inp)
+        out3 = self.transform(inp)
+        return out1, out2, out3
+    
 class _RAF(datasets.ImageFolder):
     
     def __init__(self, mode:str=None, hapi_data_dir:str = None, hapi_info:str = None, **kwargs):
@@ -67,6 +76,15 @@ class _RAF(datasets.ImageFolder):
         """
         path, target = self.samples[index]
         sample = self.loader(path)
+        transforms.Compose([
+        dataset.RandomPadandCrop(32),
+        dataset.RandomFlip(),
+        dataset.ToTensor(),
+    ])
+        self.transform = transforms.Compose([transforms.PILToTensor(),
+                                            transforms.ConvertImageDtype(torch.float)])
+        
+        self.transform = TransformTwice(self.transform)
         if self.transform is not None:
             sample = self.transform(sample)
         if self.target_transform is not None:
@@ -140,7 +158,13 @@ class RAF(ImageFolder):
                 Tuple of batched input and label on ``env['device']``.
                 Label is transformed to ``torch.LongTensor``.
         """
-        return (data[0].to(env['device'], non_blocking=True),
+        if isinstance(data[0],tuple):
+            return ((data[0][0].to(env['device'], non_blocking=True),data[0][1].to(env['device'], non_blocking=True)),
+                data[1].to(env['device'], dtype=torch.long, non_blocking=True),
+                data[2].to(env['device'], non_blocking=True),
+                data[3].to(env['device'], dtype=torch.long, non_blocking=True))
+        else:
+            return (data[0].to(env['device'], non_blocking=True),
                 data[1].to(env['device'], dtype=torch.long, non_blocking=True),
                 data[2].to(env['device'], non_blocking=True),
                 data[3].to(env['device'], dtype=torch.long, non_blocking=True))

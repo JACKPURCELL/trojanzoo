@@ -43,6 +43,7 @@ def train(module: nn.Module, num_classes: int,
           verbose: bool = True, output_freq: str = 'iter', indent: int = 0,
           change_train_eval: bool = True, lr_scheduler_freq: str = 'epoch',
           backward_and_step: bool = True,
+          mixmatch: bool = False,
           **kwargs):
     r"""Train the model"""
     if epochs <= 0:

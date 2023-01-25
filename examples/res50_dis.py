@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # _RAF.add_argument(group)
     # trojanvision.attacks.add_argument(parser)
     # torch.random.manual_seed(int(time()))
-    seed = int(time())
+    seed = 666
     print("seed",seed)
     torch.manual_seed(seed)
     torch.random.manual_seed(seed)

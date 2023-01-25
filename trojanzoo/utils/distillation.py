@@ -21,6 +21,8 @@ from torch.optim.lr_scheduler import _LRScheduler
 import torch.utils.data
 
 
+
+
 def distillation(module: nn.Module, num_classes: int,
           epochs: int, optimizer: Optimizer, lr_scheduler: _LRScheduler = None,
           adv_train: bool = None,
@@ -45,7 +47,9 @@ def distillation(module: nn.Module, num_classes: int,
           verbose: bool = True, output_freq: str = 'iter', indent: int = 0,
           change_train_eval: bool = True, lr_scheduler_freq: str = 'epoch',
           backward_and_step: bool = True, 
+          mixmatch: bool = False,
           tea_forward_fn: Callable[..., torch.Tensor] = None,
+          interleave_fn = None,
           **kwargs):
     r"""Train the model"""
     if epochs <= 0:
@@ -147,6 +151,23 @@ def distillation(module: nn.Module, num_classes: int,
             _iter = _epoch * len_loader_train + i
             # data_time.update(time.perf_counter() - end)
             # optimizer.zero_grad()
+            if mixmatch:
+                mixed_input, mixed_target = get_data_fn(data, mode=mode)
+                # interleave labeled and unlabed samples between batches to get correct batchnorm calculation 
+                mixed_input = list(torch.split(mixed_input, batch_size))
+                mixed_input = interleave_fn(mixed_input, batch_size)
+
+                logits = [forward_fn(mixed_input[0])]
+                for input in mixed_input[1:]:
+                    logits.append(forward_fn(input))
+
+                # put interleaved samples back
+                logits = interleave_fn(logits, batch_size)
+                logits_x = logits[0]
+                logits_u = torch.cat(logits[1:], dim=0)
+
+                loss = loss_fn(logits_x, mixed_target[:batch_size], logits_u, mixed_target[batch_size:], _iter, epochs)
+
 
 
             _input, _label, _soft_label, hapi_label  = get_data_fn(data, mode=mode)

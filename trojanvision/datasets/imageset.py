@@ -101,7 +101,7 @@ class ImageSet(Dataset):
             '--dataset_normalize', dest='normalize', action='store_true',
             help='use transforms.Normalize in dataset transform. '
             '(It\'s used in model as the first layer by default.)')
-        group.add_argument('--transform', choices=[None, 'none', 'bit', 'pytorch'])
+        group.add_argument('--transform', choices=[None, 'none', 'bit', 'pytorch','mixmatch'])
         group.add_argument('--auto_augment', action='store_true',
                            help='use auto augment')
         group.add_argument('--mixup', action='store_true', help='use mixup')
@@ -122,6 +122,7 @@ class ImageSet(Dataset):
         self.norm_par: dict[str, list[float]] = norm_par
         self.normalize = normalize
         self.transform = transform
+        self.transform_type = transform
         self.auto_augment = auto_augment
         self.mixup = mixup
         self.mixup_alpha = mixup_alpha
@@ -176,6 +177,8 @@ class ImageSet(Dataset):
         normalize = normalize if normalize is not None else self.normalize
         if self.transform == 'bit':
             return get_transform_bit(mode, self.data_shape)
+        # elif self.transform == 'mixmatch' and mode == 'train':
+        #     transform = None
         elif self.data_shape == [3, 224, 224]:
             transform = get_transform_imagenet(
                 mode, use_tuple=self.transform != 'pytorch',

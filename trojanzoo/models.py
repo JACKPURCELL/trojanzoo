@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import itertools
 from trojanzoo.configs import config
 from trojanzoo.datasets import Dataset
 from trojanzoo.environ import env
@@ -14,6 +15,7 @@ from trojanzoo.utils.output import ansi, prints
 from trojanzoo.utils.tensor import add_noise
 from trojanzoo.utils.train import train, validate, compare
 import torch.nn.functional as F
+import torchvision.transforms as transforms
 
 import torch
 import torch.nn as nn
@@ -39,6 +41,16 @@ __all__ = ['_Model', 'Model',
            'output_available_models']
 
 
+
+class TransformTwice:
+    def __init__(self, transform):
+        self.transform = transform
+
+    def __call__(self, inp):
+        out1 = self.transform(inp)
+        out2 = self.transform(inp)
+        return out1, out2
+    
 class _Model(nn.Module):
     r"""A specific model class which inherits :any:`torch.nn.Module`.
 
@@ -277,6 +289,17 @@ class Model(BasicObject):
                            help='randomized smoothing sampling number '
                            '(default: 100)')
         group.add_argument('--model_dir', help='directory to store pretrained models')
+        group.add_argument('--split_label_percent', type=float,
+                           help='split_label_percent ex.0.5')
+        group.add_argument('--split_unlabel_percent', type=float,
+                           help='split_unlabel_percent ex.0.5')
+        group.add_argument('--T', type=float,
+                           help='split_unlabel_percent ex.0.5'
+                           '(default: 0.5)')
+        group.add_argument('--alpha', type=float)
+        group.add_argument('--lambda_u',  type=float)
+        group.add_argument('--mixmatch', action='store_true',help=' (default: False)')
+        
         return group
 
     def __init__(self, name: str = 'model', suffix: str = None,
@@ -285,8 +308,19 @@ class Model(BasicObject):
                  num_classes: int = None, folder_path: str = None,
                  official: bool = False, pretrained: bool = False,
                  randomized_smooth: bool = False,
-                 rs_sigma: float = 0.01, rs_n: int = 100, **kwargs):
+                 rs_sigma: float = 0.01, rs_n: int = 100, 
+                 split_label_percent: float = 1.0,
+                 split_unlabel_percent: float = 0.0,
+                 T: float = 0.5,
+                 alpha: float = 0.75,
+                 mixmatch: bool = False,
+                 lambda_u: float = 100.0,
+                 **kwargs):
         super().__init__()
+        self.T = T
+        self.alpha = alpha
+        self.mixmatch = mixmatch
+        self.lambda_u = lambda_u
         self.param_list['model'] = ['folder_path']
         if suffix is not None:
             self.param_list['model'].append('suffix')
@@ -296,7 +330,25 @@ class Model(BasicObject):
             self.param_list['model'].extend(
                 ['randomized_smooth', 'rs_sigma', 'rs_n'])
         self.name: str = name
-        self.dataset = dataset
+        
+        if split_unlabel_percent != 0.0:                    
+            dataset, _ = dataset.split_dataset(
+                dataset.get_dataset('train'),
+                percent=split_label_percent+split_unlabel_percent)
+            dataset, unlabel_dataset = dataset.split_dataset(
+                dataset.get_dataset('train'),
+                percent=split_label_percent/(split_label_percent+split_unlabel_percent))
+            self.dataset = dataset.get_dataloader(
+                mode='train', dataset=dataset)
+            self.unlabel_dataset = dataset.get_dataloader(
+                mode='train', dataset=unlabel_dataset)
+            self.unlabel_dataset.dataset.transform = TransformTwice(self.unlabel_dataset.dataset.transform)
+            self.unlabel_iterator = itertools.cycle(self.unlabel_dataset)
+        else:
+            self.dataset = dataset
+            
+      
+            
         self.suffix = suffix
         self.randomized_smooth: bool = randomized_smooth
         self.rs_sigma: float = rs_sigma
@@ -623,10 +675,31 @@ class Model(BasicObject):
         # print("CrossEntropyLoss")
         return criterion(_output, _label)
 
+
+    def linear_rampup(self, current, rampup_length):
+        if rampup_length == 0:
+            return 1.0
+        else:
+            current = np.clip(current / rampup_length, 0.0, 1.0)
+            return float(current)
+    
+    def SemiLoss(self, outputs_x, targets_x, outputs_u, targets_u, epoch, total_epoch):
+        # Lx, Lu, w = criterion(logits_x, mixed_target[:batch_size], logits_u, mixed_target[batch_size:], epoch+batch_idx/args.train_iteration)
+        # lx is cross entropy, lu is L2 normalization
+        
+        probs_u = torch.softmax(outputs_u, dim=1)
+        Lx = -torch.mean(torch.sum(F.log_softmax(outputs_x, dim=1) * targets_x, dim=1))
+        Lu = torch.mean((probs_u - targets_u)**2)
+        w = self.lambda_u * self.linear_rampup(epoch, total_epoch)
+        loss = Lx + w * Lu
+        
+        return loss
+    
     
     def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
              _output: torch.Tensor = None, reduction: str = 'mean',_soft_label: torch.Tensor = None,amp: bool = False, 
-             temp: float = 1.0, **kwargs) -> torch.Tensor:
+             temp: float = 1.0, outputs_x=None, targets_x=None, outputs_u=None, targets_u=None, epoch=None,total_epoch=None,
+             **kwargs) -> torch.Tensor:
         r"""Calculate the loss using :attr:`self.criterion`
         (:attr:`self.criterion_noreduction`).
 
@@ -648,19 +721,18 @@ class Model(BasicObject):
             torch.Tensor:
                 A scalar loss tensor (with shape ``(N)`` if ``reduction='none'``).
         """
-        #Origin
-        # criterion = self.criterion_noreduction if reduction == 'none' \
-        #     else self.criterion
-        # if _output is None:
-        #     _output = self(_input, **kwargs)
-        # # print("CrossEntropyLoss")
-        # return criterion(_output, _label)
-        
+        if outputs_x is not None:
+            # return self.SemiLossTensor(outputs_x, reduction
+            return self.SemiLoss(outputs_x, targets_x, outputs_u, targets_u, epoch, total_epoch)
+            
         if _output is None:
             _output = self(_input, **kwargs)
         if _soft_label is None:
             # print("validate")
             return self.val_loss(_input=_input, _label=_label, _output=_output, reduction=reduction)
+
+            
+        
 
         criterion = nn.CrossEntropyLoss(reduction='mean')
         # print("DISS_Cross")
@@ -1076,6 +1148,7 @@ class Model(BasicObject):
         validate_fn = validate_fn if callable(validate_fn) else self._dis_validate
         save_fn = save_fn if callable(save_fn) else self.save
         accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
+        interleave_fn = None if self.mixmatch else self.interleave
         kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
         # kwargs['tea_forward_fn'] = kwargs.get('tea_forward_fn', self.__call__)
 
@@ -1102,7 +1175,8 @@ class Model(BasicObject):
                      writer=writer, main_tag=main_tag, tag=tag,
                      accuracy_fn=accuracy_fn,
                      verbose=verbose, indent=indent,
-                     tea_forward_fn=tea_forward_fn, **kwargs)
+                     tea_forward_fn=tea_forward_fn, mixmatch=self.mixmatch,
+                     interleave_fn = interleave_fn, **kwargs)
 
 
     def _dis_validate(self, module: nn.Module = None, num_classes: int = None,
@@ -1190,6 +1264,26 @@ class Model(BasicObject):
 
     # ----------------------------Utility--------------------------- #
 
+
+    def interleave_offsets(self, batch, nu):
+        groups = [batch // (nu + 1)] * (nu + 1)
+        for x in range(batch - sum(groups)):
+            groups[-x - 1] += 1
+        offsets = [0]
+        for g in groups:
+            offsets.append(offsets[-1] + g)
+        assert offsets[-1] == batch
+        return offsets
+
+
+    def interleave(self, xy, batch):
+        nu = len(xy) - 1
+        offsets = self.interleave_offsets(batch, nu)
+        xy = [[v[offsets[p]:offsets[p + 1]] for p in range(nu + 1)] for v in xy]
+        for i in range(1, nu + 1):
+            xy[0][i], xy[i][i] = xy[i][i], xy[0][i]
+        return [torch.cat(v, dim=0) for v in xy]
+
     def get_data(self, data, **kwargs):
         r"""Process data. Defaults to be :attr:`self.dataset.get_data`.
         If :attr:`self.dataset` is ``None``, return :attr:`data` directly.
@@ -1202,8 +1296,38 @@ class Model(BasicObject):
         Returns:
             Any: Processed data.
         """
-        if self.dataset is not None:
+        #TODO:MODE
+        if self.dataset is not None and self.unlabel_dataset is None:
             return self.dataset.get_data(data, **kwargs)
+        elif self.dataset is not None and self.unlabel_dataset is not None and kwargs['mode'] == 'train_STU':
+            _input, _label, _soft_label, hapi_label = self.dataset.get_data(data, **kwargs)
+            (inputs_u, inputs_u2), _ = self.unlabel_iterator.next()
+            with torch.no_grad():
+                # compute guessed labels of unlabel samples
+                outputs_u = self.model(inputs_u)
+                outputs_u2 = self.model(inputs_u2)
+                p = (torch.softmax(outputs_u, dim=1) + torch.softmax(outputs_u2, dim=1)) / 2
+                pt = p**(1/self.T)
+                targets_u = pt / pt.sum(dim=1, keepdim=True)
+                targets_u = targets_u.detach()
+
+            # mixup
+            all_inputs = torch.cat([_input, inputs_u, inputs_u2], dim=0)
+            all_targets = torch.cat([_soft_label, targets_u, targets_u], dim=0)
+
+            l = np.random.beta(self.alpha, self.alpha)
+
+            l = max(l, 1-l)
+
+            idx = torch.randperm(all_inputs.size(0))
+
+            input_a, input_b = all_inputs, all_inputs[idx]
+            target_a, target_b = all_targets, all_targets[idx]
+
+            mixed_input = l * input_a + (1 - l) * input_b
+            mixed_target = l * target_a + (1 - l) * target_b
+            
+            return mixed_input, mixed_target
         else:
             return data
 
