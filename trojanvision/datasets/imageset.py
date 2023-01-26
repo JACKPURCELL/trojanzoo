@@ -110,6 +110,8 @@ class ImageSet(Dataset):
         group.add_argument('--cutmix_alpha', type=float, help='cutmix alpha (default: 0.0)')
         group.add_argument('--cutout', action='store_true', help='use cutout')
         group.add_argument('--cutout_length', type=int, help='cutout length')
+
+        
         return group
 
     def __init__(self, norm_par: dict[str, list[float]] = None,
@@ -130,6 +132,7 @@ class ImageSet(Dataset):
         self.cutmix_alpha = cutmix_alpha
         self.cutout = cutout
         self.cutout_length = cutout_length
+
 
         mixup_transforms = []
         if mixup:
@@ -177,8 +180,12 @@ class ImageSet(Dataset):
         normalize = normalize if normalize is not None else self.normalize
         if self.transform == 'bit':
             return get_transform_bit(mode, self.data_shape)
-        # elif self.transform == 'mixmatch' and mode == 'train':
-        #     transform = None
+        elif self.transform == 'mixmatch' and mode == 'train':
+            transform = transforms.Compose([
+                                    transforms.RandomCrop(self.data_shape[-2:], padding=self.data_shape[-1] // 8),
+                                    transforms.RandomHorizontalFlip(),
+                                    transforms.PILToTensor(),
+                                    transforms.ConvertImageDtype(torch.float)])
         elif self.data_shape == [3, 224, 224]:
             transform = get_transform_imagenet(
                 mode, use_tuple=self.transform != 'pytorch',

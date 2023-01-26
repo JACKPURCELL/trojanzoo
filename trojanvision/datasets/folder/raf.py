@@ -17,15 +17,7 @@ import re
 from trojanvision.utils.dataset import ZipFolder
 import hapi
 # hapi.config.data_dir = "/home/ljc/HAPI" 
-class TransformTwice:
-    def __init__(self, transform):
-        self.transform = transform
 
-    def __call__(self, inp):
-        out1 = self.transform(inp)
-        out2 = self.transform(inp)
-        out3 = self.transform(inp)
-        return out1, out2, out3
     
 class _RAF(datasets.ImageFolder):
     
@@ -76,15 +68,15 @@ class _RAF(datasets.ImageFolder):
         """
         path, target = self.samples[index]
         sample = self.loader(path)
-        transforms.Compose([
-        dataset.RandomPadandCrop(32),
-        dataset.RandomFlip(),
-        dataset.ToTensor(),
-    ])
-        self.transform = transforms.Compose([transforms.PILToTensor(),
-                                            transforms.ConvertImageDtype(torch.float)])
+    #     transforms.Compose([
+    #     dataset.RandomPadandCrop(32),
+    #     dataset.RandomFlip(),
+    #     dataset.ToTensor(),
+    # ])
+        # self.transform = transforms.Compose([transforms.PILToTensor(),
+        #                                     transforms.ConvertImageDtype(torch.float)])
         
-        self.transform = TransformTwice(self.transform)
+        # self.transform = TransformTwice(self.transform)
         if self.transform is not None:
             sample = self.transform(sample)
         if self.target_transform is not None:
@@ -103,7 +95,7 @@ class _RAF(datasets.ImageFolder):
 class RAF(ImageFolder):
     name = 'RAFDB'
     num_classes = 7
-
+    data_shape = [3,100,100]
     @classmethod
     def add_argument(cls, group: argparse._ArgumentGroup):
         r"""Add image dataset arguments to argument parser group.

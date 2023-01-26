@@ -467,6 +467,8 @@ class ImageModel(Model):
         # In training process, `adv_train` args will not be passed to `get_data`.
         # It's passed to `_validate`.
         # So it's always `False`.
+        if self.mixmatch and kwargs['mode'] == 'train_STU':
+            return super().get_data(data, **kwargs)
         _input, _label, _soft_label, hapi_label = super().get_data(data, **kwargs)
         if adv_train:
             assert self.pgd is not None

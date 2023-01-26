@@ -16,6 +16,7 @@ from trojanzoo.utils.tensor import add_noise
 from trojanzoo.utils.train import train, validate, compare
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+from torch.utils.data import Subset
 
 import torch
 import torch.nn as nn
@@ -331,19 +332,28 @@ class Model(BasicObject):
                 ['randomized_smooth', 'rs_sigma', 'rs_n'])
         self.name: str = name
         
-        if split_unlabel_percent != 0.0:                    
-            dataset, _ = dataset.split_dataset(
+        if split_unlabel_percent != 0.0:
+            self.valid_loader = dataset.get_dataloader(
+                mode='valid', dataset=dataset.get_dataset('valid'))         
+            
+            _temp_dataset, _ = dataset.split_dataset(
                 dataset.get_dataset('train'),
                 percent=split_label_percent+split_unlabel_percent)
-            dataset, unlabel_dataset = dataset.split_dataset(
-                dataset.get_dataset('train'),
+            
+            
+            _label_dataset, _temp_unlabel_dataset = dataset.split_dataset(
+                _temp_dataset,
                 percent=split_label_percent/(split_label_percent+split_unlabel_percent))
-            self.dataset = dataset.get_dataloader(
-                mode='train', dataset=dataset)
-            self.unlabel_dataset = dataset.get_dataloader(
-                mode='train', dataset=unlabel_dataset)
-            self.unlabel_dataset.dataset.transform = TransformTwice(self.unlabel_dataset.dataset.transform)
-            self.unlabel_iterator = itertools.cycle(self.unlabel_dataset)
+            
+            _unlabel_dataset = Subset(dataset.get_dataset('train',transform = TransformTwice(_temp_unlabel_dataset.dataset.transform)),_temp_unlabel_dataset.indices)
+
+            
+            self.dataset = dataset
+            self.loader_train = dataset.get_dataloader(
+                mode='train', dataset=_label_dataset)
+            _unlabel_dataloader = dataset.get_dataloader(
+                mode='train', dataset=_unlabel_dataset)
+            self.unlabel_iterator = itertools.cycle(_unlabel_dataloader)
         else:
             self.dataset = dataset
             
@@ -676,21 +686,21 @@ class Model(BasicObject):
         return criterion(_output, _label)
 
 
-    def linear_rampup(self, current, rampup_length):
+    def linear_rampup(self, iter, rampup_length):
         if rampup_length == 0:
             return 1.0
         else:
-            current = np.clip(current / rampup_length, 0.0, 1.0)
+            current = np.clip(iter / rampup_length, 0.0, 1.0)
             return float(current)
     
-    def SemiLoss(self, outputs_x, targets_x, outputs_u, targets_u, epoch, total_epoch):
+    def SemiLoss(self, outputs_x, targets_x, outputs_u, targets_u, iter):
         # Lx, Lu, w = criterion(logits_x, mixed_target[:batch_size], logits_u, mixed_target[batch_size:], epoch+batch_idx/args.train_iteration)
         # lx is cross entropy, lu is L2 normalization
         
         probs_u = torch.softmax(outputs_u, dim=1)
         Lx = -torch.mean(torch.sum(F.log_softmax(outputs_x, dim=1) * targets_x, dim=1))
         Lu = torch.mean((probs_u - targets_u)**2)
-        w = self.lambda_u * self.linear_rampup(epoch, total_epoch)
+        w = self.lambda_u * self.linear_rampup(iter,16000)
         loss = Lx + w * Lu
         
         return loss
@@ -698,7 +708,7 @@ class Model(BasicObject):
     
     def loss(self, _input: torch.Tensor = None, _label: torch.Tensor = None,
              _output: torch.Tensor = None, reduction: str = 'mean',_soft_label: torch.Tensor = None,amp: bool = False, 
-             temp: float = 1.0, outputs_x=None, targets_x=None, outputs_u=None, targets_u=None, epoch=None,total_epoch=None,
+             temp: float = 1.0, outputs_x=None, targets_x=None, outputs_u=None, targets_u=None, iter=None,
              **kwargs) -> torch.Tensor:
         r"""Calculate the loss using :attr:`self.criterion`
         (:attr:`self.criterion_noreduction`).
@@ -723,7 +733,7 @@ class Model(BasicObject):
         """
         if outputs_x is not None:
             # return self.SemiLossTensor(outputs_x, reduction
-            return self.SemiLoss(outputs_x, targets_x, outputs_u, targets_u, epoch, total_epoch)
+            return self.SemiLoss(outputs_x, targets_x, outputs_u, targets_u, iter)
             
         if _output is None:
             _output = self(_input, **kwargs)
@@ -1141,14 +1151,17 @@ class Model(BasicObject):
                verbose: bool = True, indent: int = 0,
                tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         r"""Train the model"""
-        loader_train = loader_train if loader_train is not None \
+        if self.mixmatch:
+            loader_train = self.loader_train
+        else:
+            loader_train = loader_train if loader_train is not None \
             else self.dataset.loader['train']
         get_data_fn = get_data_fn if callable(get_data_fn) else self.get_data
         loss_fn = loss_fn if callable(loss_fn) else self.loss
         validate_fn = validate_fn if callable(validate_fn) else self._dis_validate
         save_fn = save_fn if callable(save_fn) else self.save
         accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
-        interleave_fn = None if self.mixmatch else self.interleave
+        interleave_fn = None if not self.mixmatch else self.interleave
         kwargs['forward_fn'] = kwargs.get('forward_fn', self.__call__)
         # kwargs['tea_forward_fn'] = kwargs.get('tea_forward_fn', self.__call__)
 
@@ -1199,7 +1212,10 @@ class Model(BasicObject):
         """
         module = self._model if module is None else module
         num_classes = self.num_classes if num_classes is None else num_classes
-        loader = loader or self.dataset.loader['valid']
+        if self.mixmatch:
+            loader = self.valid_loader
+        else:    
+            loader = loader or self.dataset.loader['valid']
         get_data_fn = get_data_fn or self.get_data
         loss_fn = loss_fn or self.loss
         accuracy_fn = accuracy_fn if callable(accuracy_fn) else self.accuracy
@@ -1297,11 +1313,14 @@ class Model(BasicObject):
             Any: Processed data.
         """
         #TODO:MODE
-        if self.dataset is not None and self.unlabel_dataset is None:
+        if self.dataset is not None and kwargs['mode'] == 'valid':
             return self.dataset.get_data(data, **kwargs)
-        elif self.dataset is not None and self.unlabel_dataset is not None and kwargs['mode'] == 'train_STU':
+        elif self.mixmatch and kwargs['mode'] == 'train_STU':
             _input, _label, _soft_label, hapi_label = self.dataset.get_data(data, **kwargs)
-            (inputs_u, inputs_u2), _ = self.unlabel_iterator.next()
+            (inputs_u, inputs_u2), _, _, _ = next(self.unlabel_iterator)
+            inputs_u = inputs_u.cuda()
+            inputs_u2 = inputs_u2.cuda()
+            
             with torch.no_grad():
                 # compute guessed labels of unlabel samples
                 outputs_u = self.model(inputs_u)
@@ -1327,7 +1346,7 @@ class Model(BasicObject):
             mixed_input = l * input_a + (1 - l) * input_b
             mixed_target = l * target_a + (1 - l) * target_b
             
-            return mixed_input, mixed_target
+            return mixed_input, mixed_target, _input.shape[0]
         else:
             return data
 

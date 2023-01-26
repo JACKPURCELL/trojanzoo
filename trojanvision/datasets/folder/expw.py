@@ -71,6 +71,7 @@ class _EXPW(datasets.ImageFolder):
 class EXPW_112(ImageFolder):
     name = 'EXPW_112'
     num_classes = 7
+    data_shape = [3,112,112]
 
     @classmethod
     def add_argument(cls, group: argparse._ArgumentGroup):
