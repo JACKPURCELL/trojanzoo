@@ -196,8 +196,11 @@ class ImageSet(Dataset):
                 cutout=self.cutout, cutout_length=self.cutout_length,
                 data_shape=self.data_shape)
         else:
-            transform = transforms.Compose([transforms.PILToTensor(),
-                                            transforms.ConvertImageDtype(torch.float)])
+            transform = get_transform_imagenet(
+                mode, use_tuple=self.transform != 'pytorch',
+                auto_augment=self.auto_augment)
+            # transform = transforms.Compose([transforms.PILToTensor(),
+            #                                 transforms.ConvertImageDtype(torch.float)])
         if normalize and self.norm_par is not None:
             transform.transforms.append(transforms.Normalize(
                 mean=self.norm_par['mean'], std=self.norm_par['std']))
