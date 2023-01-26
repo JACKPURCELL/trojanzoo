@@ -355,7 +355,7 @@ class Model(BasicObject):
             _unlabel_dataloader = dataset.get_dataloader(
                 mode='train', dataset=_unlabel_dataset)
             self.unlabel_iterator = itertools.cycle(_unlabel_dataloader)
-        elif split_label_percent != 0.0:
+        elif split_label_percent != 1.0:
             _label_dataset, _ = dataset.split_dataset(
                 dataset.get_dataset('train'),
                 percent=split_label_percent)
@@ -1159,7 +1159,7 @@ class Model(BasicObject):
                verbose: bool = True, indent: int = 0,
                tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         r"""Train the model"""
-        if self.split_label_percent:
+        if self.split_label_percent!=1.0:
             loader_train = self.loader_train
         else:
             loader_train = loader_train if loader_train is not None \
