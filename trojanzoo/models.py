@@ -321,6 +321,7 @@ class Model(BasicObject):
         self.T = T
         self.alpha = alpha
         self.mixmatch = mixmatch
+        self.split_label_percent = split_label_percent
         self.lambda_u = lambda_u
         self.param_list['model'] = ['folder_path']
         if suffix is not None:
@@ -354,6 +355,13 @@ class Model(BasicObject):
             _unlabel_dataloader = dataset.get_dataloader(
                 mode='train', dataset=_unlabel_dataset)
             self.unlabel_iterator = itertools.cycle(_unlabel_dataloader)
+        elif split_label_percent != 0.0:
+            _label_dataset, _ = dataset.split_dataset(
+                dataset.get_dataset('train'),
+                percent=split_label_percent)
+            self.loader_train = dataset.get_dataloader(
+                mode='train', dataset=_label_dataset)
+            self.dataset = dataset
         else:
             self.dataset = dataset
             
@@ -1151,7 +1159,7 @@ class Model(BasicObject):
                verbose: bool = True, indent: int = 0,
                tea_forward_fn: Callable[..., torch.Tensor] = None, **kwargs):
         r"""Train the model"""
-        if self.mixmatch:
+        if self.split_label_percent:
             loader_train = self.loader_train
         else:
             loader_train = loader_train if loader_train is not None \
@@ -1313,9 +1321,8 @@ class Model(BasicObject):
             Any: Processed data.
         """
         #TODO:MODE
-        if self.dataset is not None and kwargs['mode'] == 'valid':
-            return self.dataset.get_data(data, **kwargs)
-        elif self.mixmatch and kwargs['mode'] == 'train_STU':
+
+        if self.mixmatch and kwargs['mode'] == 'train_STU':
             _input, _label, _soft_label, hapi_label = self.dataset.get_data(data, **kwargs)
             (inputs_u, inputs_u2), _, _, _ = next(self.unlabel_iterator)
             inputs_u = inputs_u.cuda()
@@ -1347,6 +1354,8 @@ class Model(BasicObject):
             mixed_target = l * target_a + (1 - l) * target_b
             
             return mixed_input, mixed_target, _input.shape[0]
+        elif self.dataset is not None:
+            return self.dataset.get_data(data, **kwargs)
         else:
             return data
 
