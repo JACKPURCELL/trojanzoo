@@ -150,13 +150,8 @@ class RAF(ImageFolder):
                 Tuple of batched input and label on ``env['device']``.
                 Label is transformed to ``torch.LongTensor``.
         """
-        if isinstance(data[0],tuple):
-            return ((data[0][0].to(env['device'], non_blocking=True),data[0][1].to(env['device'], non_blocking=True)),
-                data[1].to(env['device'], dtype=torch.long, non_blocking=True),
-                data[2].to(env['device'], non_blocking=True),
-                data[3].to(env['device'], dtype=torch.long, non_blocking=True))
-        else:
-            return (data[0].to(env['device'], non_blocking=True),
-                data[1].to(env['device'], dtype=torch.long, non_blocking=True),
-                data[2].to(env['device'], non_blocking=True),
-                data[3].to(env['device'], dtype=torch.long, non_blocking=True))
+
+        return (data[0].to(env['device'], non_blocking=True),
+            data[1].to(env['device'], dtype=torch.long, non_blocking=True),
+            data[2].to(env['device'], non_blocking=True),
+            data[3].to(env['device'], dtype=torch.long, non_blocking=True))
