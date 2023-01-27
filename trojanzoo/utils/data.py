@@ -179,6 +179,8 @@ def split_dataset(dataset: Dataset | Subset,
     #TODO: if batch_size != 64
     if length % 64 != 0:
         length += 64 - (length % 64)
+        if length > len(dataset):
+            length -= 64
     indices = np.arange(len(dataset))
     if shuffle:
         if seed is not None:
