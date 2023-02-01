@@ -171,6 +171,7 @@ def distillation(module: nn.Module, num_classes: int,
                 loss = loss_fn(outputs_x = logits_x, targets_x = mixed_target[:batch_size], outputs_u = logits_u, targets_u = mixed_target[batch_size:], iter = _iter)
 
 
+
             else:
                 _input, _label, _soft_label, hapi_label  = get_data_fn(data, mode=mode)
                 
@@ -178,7 +179,7 @@ def distillation(module: nn.Module, num_classes: int,
                     pre_conditioner.track.enable()
                     #TODO: maybe can remove
                 _output = forward_fn(_input, amp=amp, parallel=True)
-                loss = loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, amp=amp)
+                loss = loss_fn(_input=_input, _label=hapi_label, _output=_output, amp=amp)
                 # print("train loss： ",loss)
                 # soft_target = tea_forward_fn(_input, amp=amp, parallel=True)
                 # _output =  forward_fn(_input, amp=amp, parallel=True)
@@ -340,7 +341,7 @@ def dis_validate(module: nn.Module, num_classes: int,
         with torch.no_grad():
             _output = forward_fn(_input)
             gt_loss = float(loss_fn(_input=_input, _label=_label, _output=_output, **kwargs))
-            hapi_loss = float(loss_fn(_input=_input, _soft_label=_soft_label, _output=_output, temp=1.0, **kwargs))
+            hapi_loss = float(loss_fn(_input=_input, _label=hapi_label, _output=_output, temp=1.0, **kwargs))
             hapi_acc1, hapi_acc5 = accuracy_fn(
                 _output, hapi_label, num_classes=num_classes, topk=(1, 5))
             gt_acc1, gt_acc5 = accuracy_fn(
